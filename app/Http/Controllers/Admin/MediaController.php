@@ -7,6 +7,7 @@ use App\Models\Album;
 use App\Models\Media;
 use App\Services\MediaIngestService;
 use App\Services\MediaProcessingStatus;
+use App\Services\QueuePump;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,8 @@ class MediaController extends Controller
 
     public function processingStatus(): JsonResponse
     {
+        QueuePump::pumpIfDue();
+
         return response()->json(MediaProcessingStatus::global());
     }
 

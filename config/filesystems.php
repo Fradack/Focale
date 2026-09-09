@@ -45,7 +45,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/media'),
             'serve' => false,
-            'throw' => false,
+            'throw' => true,
             'report' => false,
         ],
 
@@ -58,7 +58,7 @@ return [
             'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
-            'throw' => false,
+            'throw' => true,
             'report' => false,
         ],
 

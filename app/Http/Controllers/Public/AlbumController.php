@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Services\MediaProcessingStatus;
+use App\Services\QueuePump;
 use App\Services\SpamGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,8 @@ class AlbumController extends Controller
 
     public function processingStatus(Album $album): JsonResponse
     {
+        QueuePump::pumpIfDue();
+
         return response()->json(MediaProcessingStatus::forAlbum($album->id));
     }
 
