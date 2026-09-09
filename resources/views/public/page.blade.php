@@ -20,7 +20,7 @@
   nav { display: flex; gap: 28px; font-size: 14px; color: var(--ink-soft); }
   nav a { text-decoration: none; }
   nav a:hover { color: var(--ink); }
-  main { max-width: 680px; margin: 8vh auto; padding: 0 6vw; }
+  main { max-width: 900px; margin: 8vh auto; padding: 0 6vw; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(28px, 4.5vw, 40px); margin: 0 0 28px; }
   .content { font-size: 16px; line-height: 1.8; color: var(--ink-soft); }
   .content p { margin: 0 0 1.2em; }
