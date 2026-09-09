@@ -592,9 +592,50 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
   .content-grid { grid-template-columns: 1fr; }
 }
 
+.mobile-nav-toggle { display: none; }
+.sidebar-backdrop { display: none; }
+
 @media (max-width: 900px) {
-  .sidebar { display: none; }
-  .main { padding: 24px 20px 40px; }
+  .mobile-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 160;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .mobile-nav-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  .sidebar-backdrop:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 15, 0.45);
+    z-index: 140;
+  }
+
+  .sidebar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -280px;
+    width: 232px;
+    z-index: 150;
+    transition: left 0.25s ease;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+  }
+  .sidebar.is-open { left: 0; }
+
+  .main { padding: 24px 20px 40px 70px; }
   thead { display: none; }
   table, tbody, tr, td { display: block; width: 100%; }
   tbody tr { padding: 14px 4px; }

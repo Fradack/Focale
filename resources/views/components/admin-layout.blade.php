@@ -12,8 +12,13 @@
 </head>
 <body>
 
+<button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Ouvrir le menu">
+  <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+</button>
+<div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
 <div class="shell">
-  <aside class="sidebar">
+  <aside class="sidebar" id="admin-sidebar">
     <span class="wordmark">Focale</span>
 
     <nav>
@@ -193,6 +198,24 @@
 
     poll();
     window.addEventListener('beforeunload', () => { if (timer) clearTimeout(timer); });
+  })();
+
+  (function () {
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const sidebar = document.getElementById('admin-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    function closeSidebar() {
+      sidebar.classList.remove('is-open');
+      backdrop.hidden = true;
+    }
+
+    toggle.addEventListener('click', () => {
+      sidebar.classList.add('is-open');
+      backdrop.hidden = false;
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    sidebar.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeSidebar));
   })();
 </script>
 
