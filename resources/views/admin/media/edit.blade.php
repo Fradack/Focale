@@ -10,7 +10,10 @@
       @if ($web = $media->variant('web'))
         <img src="{{ $web->url() }}" alt="{{ $media->alt_text }}" style="width:100%;display:block;">
       @else
-        <div style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:13px;">Traitement en cours…</div>
+        <div style="aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--ink-soft);font-size:13px;text-align:center;padding:0 20px;">
+          <span>Traitement en cours…</span>
+          <span style="font-size:12px;">{{ $media->variants->count() }} / 3 variantes générées</span>
+        </div>
       @endif
     </div>
 

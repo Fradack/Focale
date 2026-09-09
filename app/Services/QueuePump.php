@@ -18,9 +18,9 @@ use Illuminate\Support\Facades\DB;
  */
 class QueuePump
 {
-    private const MAX_JOBS = 6;
+    private const MAX_JOBS = 15;
 
-    private const MAX_SECONDS = 8;
+    private const MAX_SECONDS = 20;
 
     public static function pumpIfDue(): void
     {
