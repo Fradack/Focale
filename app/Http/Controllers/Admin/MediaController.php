@@ -53,6 +53,24 @@ class MediaController extends Controller
         return response()->json(MediaProcessingStatus::global());
     }
 
+    /**
+     * Statut de traitement d'une œuvre précise (utilisé par la file d'import
+     * pour afficher la progression de chaque photo individuellement, juste
+     * après son envoi).
+     */
+    public function itemProcessingStatus(Media $media): JsonResponse
+    {
+        QueuePump::pumpIfDue();
+
+        $variants = $media->variants()->count();
+
+        return response()->json([
+            'variants' => $variants,
+            'total' => 3,
+            'done' => $variants >= 3,
+        ]);
+    }
+
     public function bulkAction(Request $request): RedirectResponse
     {
         $data = $request->validate([

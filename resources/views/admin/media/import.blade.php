@@ -68,6 +68,7 @@
   const queueSummary = document.getElementById('queue-summary');
   const gotoLibraryBtn = document.getElementById('goto-library-btn');
   const uploadUrl = @json(route('admin.media.store'));
+  const itemStatusUrlTemplate = @json(route('admin.media.item-processing-status', ['media' => '__ID__']));
   const csrfToken = @json(csrf_token());
   const concurrency = @json(max(1, (int) \App\Models\Setting::get('import_concurrency', 3)));
 
@@ -150,6 +151,7 @@
         <div class="queue-item-name"></div>
         <div class="queue-item-meta"></div>
         <div class="progress-track"><div class="progress-fill"></div></div>
+        <div class="progress-track processing-track" style="display:none;margin-top:4px;"><div class="progress-fill processing-fill" style="background:var(--ok);"></div></div>
       </div>
       <span class="status-label">Import…</span>
     `;
@@ -189,6 +191,7 @@
         } else {
           item.classList.add('done');
           statusLabel.textContent = 'Importée';
+          watchItemProcessing(item, statusLabel, data.media.id);
         }
       } else {
         item.classList.add('failed');
@@ -204,6 +207,39 @@
       statusLabel.textContent = 'Erreur réseau';
       onSettled();
     });
+
+    // Progression du traitement (miniatures) de cette œuvre précise, une fois
+    // importée — distincte de la barre d'envoi ci-dessus.
+    function watchItemProcessing(item, statusLabel, mediaId) {
+      const track = item.querySelector('.processing-track');
+      const fill = item.querySelector('.processing-fill');
+      track.style.display = 'block';
+      statusLabel.textContent = 'Traitement…';
+
+      const url = itemStatusUrlTemplate.replace('__ID__', mediaId);
+
+      function poll() {
+        fetch(url, { headers: { Accept: 'application/json' } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (!data || typeof data.variants !== 'number') {
+              setTimeout(poll, 4000);
+              return;
+            }
+
+            fill.style.width = Math.round((data.variants / data.total) * 100) + '%';
+
+            if (data.done) {
+              statusLabel.textContent = 'Traitée';
+            } else {
+              setTimeout(poll, 3000);
+            }
+          })
+          .catch(() => setTimeout(poll, 4000));
+      }
+
+      poll();
+    }
 
     xhr.send(formData);
   }
