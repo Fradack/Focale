@@ -11,6 +11,7 @@ use App\Services\QueuePump;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 class MediaController extends Controller
@@ -104,7 +105,33 @@ class MediaController extends Controller
 
     public function create(): View
     {
-        return view('admin.media.import');
+        $importDir = MediaIngestService::importFolderPath();
+
+        return view('admin.media.import', [
+            'importFolderPath' => $importDir,
+            'importFolderCount' => is_dir($importDir)
+                ? collect(File::files($importDir))
+                    ->filter(fn ($f) => in_array(strtolower($f->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true))
+                    ->count()
+                : 0,
+        ]);
+    }
+
+    public function importFromFolder(MediaIngestService $service): RedirectResponse
+    {
+        $result = $service->ingestFromFolder();
+
+        $message = "{$result['imported']} œuvre(s) importée(s)";
+        if ($result['duplicates'] > 0) {
+            $message .= ", {$result['duplicates']} doublon(s) ignoré(s)";
+        }
+        if ($result['remaining'] > 0) {
+            $message .= ". {$result['remaining']} fichier(s) restant(s) — relance l'import pour continuer.";
+        } else {
+            $message .= '.';
+        }
+
+        return redirect()->route('admin.media.import')->with('status', $message);
     }
 
     public function store(Request $request, MediaIngestService $service): JsonResponse

@@ -64,6 +64,7 @@ Route::prefix('administration')->name('admin.')->middleware('auth')->group(funct
     Route::get('mediatheque', [MediaController::class, 'index'])->name('media.index');
     Route::get('mediatheque/import', [MediaController::class, 'create'])->name('media.import');
     Route::post('mediatheque/import', [MediaController::class, 'store'])->name('media.store');
+    Route::post('mediatheque/import/dossier', [MediaController::class, 'importFromFolder'])->name('media.import-folder');
     Route::post('mediatheque/action', [MediaController::class, 'bulkAction'])->name('media.bulk');
     Route::get('mediatheque/statut-traitement', [MediaController::class, 'processingStatus'])->name('media.processing-status');
     Route::get('mediatheque/{media}', [MediaController::class, 'edit'])->name('media.edit');

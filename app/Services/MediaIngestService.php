@@ -5,11 +5,81 @@ namespace App\Services;
 use App\Jobs\GenerateMediaVariants;
 use App\Models\Media;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MediaIngestService
 {
+    private const IMPORT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    /**
+     * Nombre max. de fichiers traités par appel, pour rester dans le temps
+     * d'exécution autorisé sur un hébergement mutualisé — un gros dépôt FTP
+     * (des centaines de fichiers) se vide donc en plusieurs passages plutôt
+     * qu'en un seul, chaque clic (ou sondage automatique) avançant d'un cran.
+     */
+    private const IMPORT_FOLDER_BATCH = 20;
+
+    private const IMPORT_FOLDER_SECONDS = 20;
+
+    /**
+     * Dossier où déposer des fichiers par FTP/SFTP pour les gros transferts,
+     * sans passer par l'envoi navigateur (utile pour des centaines de
+     * photos d'un coup, ou un hébergement où l'upload HTTP est trop lent/
+     * limité). Jamais servi publiquement : sous storage/app, hors webroot.
+     */
+    public static function importFolderPath(): string
+    {
+        return storage_path('app/import');
+    }
+
+    /**
+     * @return array{imported: int, duplicates: int, remaining: int}
+     */
+    public function ingestFromFolder(): array
+    {
+        $importDir = self::importFolderPath();
+        $doneDir = $importDir.'/importes';
+        File::ensureDirectoryExists($importDir);
+        File::ensureDirectoryExists($doneDir);
+
+        $files = collect(File::files($importDir))
+            ->filter(fn ($file) => in_array(strtolower($file->getExtension()), self::IMPORT_EXTENSIONS, true))
+            ->values();
+
+        $imported = 0;
+        $duplicates = 0;
+        $deadline = microtime(true) + self::IMPORT_FOLDER_SECONDS;
+
+        foreach ($files as $file) {
+            if ($imported + $duplicates >= self::IMPORT_FOLDER_BATCH || microtime(true) > $deadline) {
+                break;
+            }
+
+            $uploaded = new UploadedFile(
+                $file->getPathname(),
+                $file->getFilename(),
+                File::mimeType($file->getPathname()) ?: null,
+                null,
+                true
+            );
+
+            $result = $this->ingest($uploaded);
+            $result['duplicate'] ? $duplicates++ : $imported++;
+
+            // Déplacé (pas supprimé) après import : on garde une trace de ce
+            // qui a déjà été traité plutôt que de le faire disparaître.
+            File::move($file->getPathname(), $doneDir.'/'.$file->getFilename());
+        }
+
+        $remaining = collect(File::files($importDir))
+            ->filter(fn ($file) => in_array(strtolower($file->getExtension()), self::IMPORT_EXTENSIONS, true))
+            ->count();
+
+        return ['imported' => $imported, 'duplicates' => $duplicates, 'remaining' => $remaining];
+    }
+
     /**
      * @return array{media: Media, duplicate: bool}
      */

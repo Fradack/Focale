@@ -624,3 +624,9 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 .modal-box p { margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: var(--ink); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 #confirm-modal-ok { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+.updates-grid { display: grid; grid-template-columns: 480px; gap: 20px; align-items: start; }
+.updates-grid.has-details { grid-template-columns: 360px 1fr; }
+@media (max-width: 900px) {
+  .updates-grid, .updates-grid.has-details { grid-template-columns: 1fr; }
+}

@@ -18,6 +18,28 @@
     </div>
   </div>
 
+  <div class="panel">
+    <h2 style="margin:0 0 10px;">Import depuis un dossier serveur (gros transferts)</h2>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;">
+      Pour des centaines de photos d'un coup, dépose-les par FTP/SFTP directement dans ce dossier sur le serveur au lieu de passer par l'envoi navigateur :
+    </p>
+    <code style="display:block;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;margin-bottom:14px;word-break:break-all;">{{ $importFolderPath }}</code>
+
+    @if (session('status') && str_contains(session('status'), 'importée'))
+      <div class="alert alert-success" style="margin-bottom:14px;">{{ session('status') }}</div>
+    @endif
+
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:13px;color:var(--ink-soft);">{{ $importFolderCount }} fichier(s) en attente dans ce dossier</span>
+      @if ($importFolderCount > 0)
+        <form method="POST" action="{{ route('admin.media.import-folder') }}" id="import-folder-form">
+          @csrf
+          <button type="submit" class="btn primary" id="import-folder-btn">Importer depuis le dossier</button>
+        </form>
+      @endif
+    </div>
+  </div>
+
   <div class="dropzone" id="dropzone">
     <svg viewBox="0 0 24 24"><path d="M12 3v14"></path><path d="M5 10l7-7 7 7"></path><path d="M5 21h14"></path></svg>
     <h2>Glissez vos images ici</h2>
@@ -185,5 +207,18 @@
 
     xhr.send(formData);
   }
+
+  // Un gros dépôt FTP se traite par lots (voir MediaIngestService) : tant
+  // qu'il en reste, on relance automatiquement l'import après chaque passage
+  // plutôt que d'obliger à recliquer manuellement.
+  @if ($importFolderCount > 0 && session('status') && str_contains(session('status'), 'importée'))
+    (function () {
+      const btn = document.getElementById('import-folder-btn');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Import automatique en cours…';
+      setTimeout(() => document.getElementById('import-folder-form').requestSubmit(), 1500);
+    })();
+  @endif
 </script>
 </x-admin-layout>

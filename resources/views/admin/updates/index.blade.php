@@ -11,32 +11,39 @@
     <div class="alert alert-success">Mise à jour appliquée avec succès.</div>
     <script>
       (function () {
+        // position:absolute + hauteur totale du document (pas juste la
+        // fenêtre visible) pour que les confettis retombent bien jusqu'en
+        // bas de la page, même si elle défile.
+        const pageHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
         const canvas = document.createElement('canvas');
-        canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+        canvas.style.cssText = `position:absolute;top:0;left:0;width:100%;height:${pageHeight}px;pointer-events:none;z-index:9999;`;
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.height = pageHeight;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
         const colors = ['#7A4B33', '#4B6B4E', '#8A6A1F', '#A3402E', '#1E1C19'];
-        const pieces = Array.from({ length: 140 }, () => ({
+        const pieces = Array.from({ length: 220 }, () => ({
           x: Math.random() * canvas.width,
-          y: -20 - Math.random() * canvas.height * 0.6,
+          y: -20 - Math.random() * canvas.height * 0.3,
           size: 6 + Math.random() * 6,
           color: colors[Math.floor(Math.random() * colors.length)],
-          speedY: 2 + Math.random() * 3,
+          speedY: 3 + Math.random() * 4,
           speedX: -1.5 + Math.random() * 3,
           rotation: Math.random() * 360,
           spin: -6 + Math.random() * 12,
         }));
 
+        const maxFrames = 900;
         let frame = 0;
         function tick() {
           frame++;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          let anyOnScreen = false;
           pieces.forEach((p) => {
             p.x += p.speedX;
             p.y += p.speedY;
             p.rotation += p.spin;
+            if (p.y < canvas.height + 30) anyOnScreen = true;
             ctx.save();
             ctx.translate(p.x, p.y);
             ctx.rotate((p.rotation * Math.PI) / 180);
@@ -44,7 +51,7 @@
             ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
             ctx.restore();
           });
-          if (frame < 160) {
+          if (anyOnScreen && frame < maxFrames) {
             requestAnimationFrame(tick);
           } else {
             canvas.remove();
@@ -65,7 +72,7 @@
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:{{ $update['updateAvailable'] ? '360px 1fr' : '480px' }};gap:20px;align-items:start;">
+  <div class="updates-grid {{ $update['updateAvailable'] ? 'has-details' : '' }}">
     <div class="panel">
       <div class="field-row">
         <div class="field">
