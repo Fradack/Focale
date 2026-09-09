@@ -72,7 +72,10 @@ class UpdateService
 
     public function applyUpdate(): void
     {
-        $update = $this->checkForUpdate();
+        // Toujours revérifier plutôt que réutiliser le cache de 6h : appliquer
+        // une mise à jour est une action rare et déclenchée volontairement,
+        // elle ne doit jamais retélécharger une release déjà périmée.
+        $update = $this->checkForUpdate(fresh: true);
 
         if (! $update['updateAvailable'] || ! $update['url']) {
             throw new \RuntimeException('Aucune mise à jour disponible.');
