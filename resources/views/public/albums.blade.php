@@ -36,14 +36,7 @@
 </head>
 <body>
 
-<header>
-  <a class="wordmark" href="{{ route('home') }}">{{ \App\Models\Setting::get('site_name', 'Focale') }}</a>
-  <nav>
-    <a href="{{ route('public.albums') }}">Albums</a>
-    <a href="{{ route('public.gallery') }}">Galerie</a>
-    <a href="{{ route('public.contact') }}">Contact</a>
-  </nav>
-</header>
+<x-public-nav />
 
 <main>
   <h1>Albums</h1>

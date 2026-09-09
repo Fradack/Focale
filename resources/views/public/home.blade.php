@@ -45,17 +45,7 @@
 </head>
 <body>
 
-<header>
-  <span class="wordmark">{{ \App\Models\Setting::get('site_name', 'Focale') }}</span>
-  <nav>
-    <a href="{{ route('public.albums') }}">Albums</a>
-    <a href="{{ route('public.gallery') }}">Galerie</a>
-    @if ($aboutPage)
-      <a href="{{ route('page.show', $aboutPage) }}">À propos</a>
-    @endif
-    <a href="{{ route('public.contact') }}">Contact</a>
-  </nav>
-</header>
+<x-public-nav />
 
 <div class="cover">
   @if ($cover && $web = $cover->variant('web'))

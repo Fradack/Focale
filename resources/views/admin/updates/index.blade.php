@@ -9,9 +9,53 @@
 
   @if (session('status') === 'update-applied')
     <div class="alert alert-success">Mise à jour appliquée avec succès.</div>
+    <script>
+      (function () {
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        const colors = ['#7A4B33', '#4B6B4E', '#8A6A1F', '#A3402E', '#1E1C19'];
+        const pieces = Array.from({ length: 140 }, () => ({
+          x: Math.random() * canvas.width,
+          y: -20 - Math.random() * canvas.height * 0.6,
+          size: 6 + Math.random() * 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: 2 + Math.random() * 3,
+          speedX: -1.5 + Math.random() * 3,
+          rotation: Math.random() * 360,
+          spin: -6 + Math.random() * 12,
+        }));
+
+        let frame = 0;
+        function tick() {
+          frame++;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          pieces.forEach((p) => {
+            p.x += p.speedX;
+            p.y += p.speedY;
+            p.rotation += p.spin;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            ctx.restore();
+          });
+          if (frame < 160) {
+            requestAnimationFrame(tick);
+          } else {
+            canvas.remove();
+          }
+        }
+        tick();
+      })();
+    </script>
   @endif
 
-  <div class="alert alert-info" id="update-progress" hidden>
+  <div class="alert alert-info alert-block" id="update-progress" hidden>
     <div style="width:100%;">
       <strong>Mise à jour en cours…</strong>
       <div style="margin-top:4px;">Ne quittez pas cette page et ne l'actualisez pas — l'opération peut prendre une minute.</div>

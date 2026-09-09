@@ -118,13 +118,7 @@
 </head>
 <body>
 
-<header>
-  <a class="wordmark" href="{{ route('home') }}">Focale</a>
-  <nav>
-    <a href="{{ route('public.albums') }}">Albums</a>
-    <a href="{{ route('public.gallery') }}">Galerie</a>
-  </nav>
-</header>
+<x-public-nav />
 
 <div class="intro">
   <p class="kicker">album</p>

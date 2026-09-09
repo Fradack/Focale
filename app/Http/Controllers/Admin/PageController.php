@@ -26,7 +26,7 @@ class PageController extends Controller
             $slug = $base.'-'.(++$i);
         }
 
-        $page = Page::create(['title' => $title, 'slug' => $slug, 'template' => 'default', 'status' => 'draft']);
+        $page = Page::create(['title' => $title, 'slug' => $slug, 'template' => 'default', 'status' => 'draft', 'show_in_nav' => true]);
 
         return redirect()->route('admin.pages.edit', $page);
     }
@@ -45,6 +45,7 @@ class PageController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:pages,slug,'.$page->id],
             'status' => ['required', 'in:draft,published'],
+            'show_in_nav' => ['nullable', 'boolean'],
             'content' => ['nullable', 'string'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
@@ -54,6 +55,7 @@ class PageController extends Controller
             'title' => $data['title'],
             'slug' => $data['slug'],
             'status' => $data['status'],
+            'show_in_nav' => $request->boolean('show_in_nav'),
             'seo_title' => $data['seo_title'] ?? null,
             'seo_description' => $data['seo_description'] ?? null,
         ]);

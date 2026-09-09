@@ -14,6 +14,9 @@
   a { color: inherit; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 24px 6vw; border-bottom: 1px solid var(--line); }
   .wordmark { font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; text-decoration: none; }
+  nav { display: flex; gap: 28px; font-size: 14px; color: var(--ink-soft); }
+  nav a { text-decoration: none; }
+  nav a:hover { color: var(--ink); }
   main { max-width: 560px; margin: 8vh auto; padding: 0 6vw; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(28px, 4.5vw, 38px); margin: 0 0 24px; }
   .notice { font-size: 14px; color: var(--ink-soft); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
@@ -27,9 +30,7 @@
 </head>
 <body>
 
-<header>
-  <a class="wordmark" href="{{ route('home') }}">Focale</a>
-</header>
+<x-public-nav />
 
 <main>
   <h1>Contact</h1>
