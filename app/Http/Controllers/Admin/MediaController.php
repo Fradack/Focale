@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Album;
 use App\Models\Media;
 use App\Services\MediaIngestService;
 use Illuminate\Http\JsonResponse;
@@ -27,11 +28,12 @@ class MediaController extends Controller
             $query->where('status', $status);
         }
 
-        $media = $query->latest()->paginate(24)->withQueryString();
+        $media = $query->latest()->paginate(60)->withQueryString();
 
         return view('admin.media.index', [
             'media' => $media,
             'view' => $request->query('view') === 'list' ? 'list' : 'grid',
+            'albums' => Album::orderBy('title')->get(['id', 'title']),
             'counts' => [
                 'all' => Media::whereNull('trashed_at')->count(),
                 'draft' => Media::whereNull('trashed_at')->where('status', 'draft')->count(),
@@ -39,6 +41,55 @@ class MediaController extends Controller
                 'trashed' => Media::whereNotNull('trashed_at')->count(),
             ],
         ]);
+    }
+
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:media,id'],
+            'do' => ['required', 'in:publish,unpublish,trash,add_to_album'],
+            'album_id' => ['required_if:do,add_to_album', 'nullable', 'exists:albums,id'],
+        ]);
+
+        $items = Media::whereIn('id', $data['ids'])->get();
+
+        switch ($data['do']) {
+            case 'publish':
+                Media::whereIn('id', $data['ids'])->update(['status' => 'published']);
+                $message = count($items).' œuvre(s) publiée(s).';
+                break;
+
+            case 'unpublish':
+                Media::whereIn('id', $data['ids'])->update(['status' => 'draft']);
+                $message = count($items).' œuvre(s) repassée(s) en brouillon.';
+                break;
+
+            case 'trash':
+                Media::whereIn('id', $data['ids'])->update(['trashed_at' => now()]);
+                $message = count($items).' œuvre(s) mise(s) à la corbeille.';
+                break;
+
+            case 'add_to_album':
+                $album = Album::findOrFail($data['album_id']);
+                $nextOrder = ($album->media()->max('sort_order') ?? -1) + 1;
+
+                foreach ($items as $item) {
+                    if (! $album->media->contains('id', $item->id)) {
+                        $album->media()->attach($item->id, ['sort_order' => $nextOrder]);
+                        $nextOrder++;
+                    }
+                }
+
+                if (! $album->cover_media_id) {
+                    $album->update(['cover_media_id' => $items->first()?->id]);
+                }
+
+                $message = count($items)." œuvre(s) ajoutée(s) à l'album « {$album->title} ».";
+                break;
+        }
+
+        return back()->with('status', $message);
     }
 
     public function create(): View
