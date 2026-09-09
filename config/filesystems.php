@@ -49,9 +49,13 @@ return [
             'report' => false,
         ],
 
+        // Racine placée directement dans public_path() (et non storage_path()) :
+        // les variantes publiques sont donc servies sans lien symbolique, ce qui
+        // fonctionne aussi sur les hébergements mutualisés en FTP seul, sans
+        // accès SSH pour lancer `artisan storage:link`.
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
@@ -73,19 +77,8 @@ return [
 
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Symbolic Links
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
-    */
-
-    'links' => [
-        public_path('storage') => storage_path('app/public'),
-    ],
+    // Aucun lien symbolique nécessaire : le disque "public" ci-dessus écrit
+    // déjà directement dans public_path('storage').
+    'links' => [],
 
 ];
