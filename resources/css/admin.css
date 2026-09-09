@@ -509,6 +509,23 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 .disk-bar-fill { height: 100%; background: var(--clay); }
 .disk-label { font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; }
 
+.processing-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+.processing-banner-label { flex-shrink: 0; color: var(--ink-soft); }
+.processing-banner-track { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.processing-banner-fill { height: 100%; background: var(--clay); transition: width 0.4s ease; }
+.processing-banner-count { flex-shrink: 0; font-weight: 500; white-space: nowrap; }
+.processing-banner.is-done .processing-banner-fill { background: var(--ok); }
+
 @media (max-width: 960px) {
   .stats { grid-template-columns: 1fr; }
   .content-grid { grid-template-columns: 1fr; }

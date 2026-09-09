@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Album;
+use App\Services\MediaProcessingStatus;
 use App\Services\SpamGuard;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -39,7 +41,13 @@ class AlbumController extends Controller
             'album' => $album,
             'previous' => $this->neighbour($album, '<'),
             'next' => $this->neighbour($album, '>'),
+            'processingStatus' => MediaProcessingStatus::forAlbum($album->id),
         ]);
+    }
+
+    public function processingStatus(Album $album): JsonResponse
+    {
+        return response()->json(MediaProcessingStatus::forAlbum($album->id));
     }
 
     public function unlock(Request $request, Album $album): RedirectResponse

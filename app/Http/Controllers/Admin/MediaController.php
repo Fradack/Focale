@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Media;
 use App\Services\MediaIngestService;
+use App\Services\MediaProcessingStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,11 @@ class MediaController extends Controller
                 'trashed' => Media::whereNotNull('trashed_at')->count(),
             ],
         ]);
+    }
+
+    public function processingStatus(): JsonResponse
+    {
+        return response()->json(MediaProcessingStatus::global());
     }
 
     public function bulkAction(Request $request): RedirectResponse

@@ -41,6 +41,7 @@ Route::middleware('maintenance')->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/albums', [PublicAlbumController::class, 'index'])->name('public.albums');
     Route::get('/album/{album:slug}', [PublicAlbumController::class, 'show'])->name('public.album');
+    Route::get('/album/{album:slug}/statut-traitement', [PublicAlbumController::class, 'processingStatus'])->name('public.album.processing-status');
     Route::post('/album/{album:slug}/deverrouiller', [PublicAlbumController::class, 'unlock'])
         ->middleware('throttle:10,1')
         ->name('public.album.unlock');
@@ -64,6 +65,7 @@ Route::prefix('administration')->name('admin.')->middleware('auth')->group(funct
     Route::get('mediatheque/import', [MediaController::class, 'create'])->name('media.import');
     Route::post('mediatheque/import', [MediaController::class, 'store'])->name('media.store');
     Route::post('mediatheque/action', [MediaController::class, 'bulkAction'])->name('media.bulk');
+    Route::get('mediatheque/statut-traitement', [MediaController::class, 'processingStatus'])->name('media.processing-status');
     Route::get('mediatheque/{media}', [MediaController::class, 'edit'])->name('media.edit');
     Route::put('mediatheque/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('mediatheque/{media}', [MediaController::class, 'destroy'])->name('media.destroy');

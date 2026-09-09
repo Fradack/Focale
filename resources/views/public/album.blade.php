@@ -110,6 +110,10 @@
   .comment-error { font-size: 13px; color: #A3402E; margin: 0; }
   @media (max-width: 860px) { .viewer { flex-direction: column; } .viewer-info { width: auto; padding: 24px 0 0; border-left: none; border-top: 1px solid var(--line); } .viewer-media { height: 48vh; } }
   @media (max-width: 480px) { .honeypot-field { display: none !important; } }
+  .processing-notice { display: flex; align-items: center; gap: 16px; max-width: 640px; margin: 0 auto; padding: 12px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+  .processing-notice-track { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .processing-notice-fill { height: 100%; background: var(--clay); transition: width 0.4s ease; }
+  .processing-notice-count { flex-shrink: 0; font-weight: 500; white-space: nowrap; color: var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -135,6 +139,14 @@
     <button class="slideshow-btn" id="slideshow-btn">Lancer le diaporama</button>
   @endif
 </div>
+
+@if ($processingStatus['pending'] > 0)
+  <div class="processing-notice" id="processing-notice" style="margin-bottom:5vh;">
+    <span class="processing-notice-label" id="processing-notice-label">Certaines photos de cet album sont encore en cours de traitement…</span>
+    <div class="processing-notice-track"><div class="processing-notice-fill" id="processing-notice-fill" style="width:{{ $processingStatus['percent'] }}%;"></div></div>
+    <span class="processing-notice-count" id="processing-notice-count">{{ $processingStatus['processed'] }} / {{ $processingStatus['total'] }}</span>
+  </div>
+@endif
 
 @if ($album->media->isEmpty())
   <p style="text-align:center;color:var(--ink-soft);padding:0 6vw 8vh;">Cet album ne contient pas encore d'œuvres.</p>
@@ -369,6 +381,45 @@
     function stopSlideshow() { fullView.classList.remove('open'); }
   }
 </script>
+
+@if ($processingStatus['pending'] > 0)
+<script>
+  (function () {
+    const notice = document.getElementById('processing-notice');
+    const label = document.getElementById('processing-notice-label');
+    const fill = document.getElementById('processing-notice-fill');
+    const count = document.getElementById('processing-notice-count');
+    const statusUrl = @json(route('public.album.processing-status', $album));
+
+    function formatEta(minutes) {
+      if (minutes === null) return 'estimation en cours…';
+      if (minutes < 1) return 'moins d\'une minute';
+      if (minutes < 60) return `~${minutes} min`;
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      return `~${hours} h${rest ? ' ' + rest + ' min' : ''}`;
+    }
+
+    function poll() {
+      fetch(statusUrl, { headers: { Accept: 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.pending > 0) {
+            fill.style.width = data.percent + '%';
+            count.textContent = `${data.processed} / ${data.total}`;
+            label.textContent = `Certaines photos de cet album sont encore en cours de traitement (${formatEta(data.eta_minutes)})…`;
+            setTimeout(poll, 5000);
+          } else {
+            location.reload();
+          }
+        })
+        .catch(() => {});
+    }
+
+    setTimeout(poll, 5000);
+  })();
+</script>
+@endif
 @endif
 
 </body>

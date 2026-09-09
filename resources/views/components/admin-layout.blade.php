@@ -66,6 +66,12 @@
   </aside>
 
   <main class="main">
+    <div class="processing-banner" id="processing-banner" hidden>
+      <span class="processing-banner-label" id="processing-banner-label">Traitement des images…</span>
+      <div class="processing-banner-track"><div class="processing-banner-fill" id="processing-banner-fill" style="width:0%;"></div></div>
+      <span class="processing-banner-count" id="processing-banner-count"></span>
+    </div>
+
     {{ $slot }}
   </main>
 </div>
@@ -81,6 +87,49 @@
     btn.classList.toggle('is-visible', !visible);
     btn.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
   });
+
+  (function () {
+    const banner = document.getElementById('processing-banner');
+    const label = document.getElementById('processing-banner-label');
+    const fill = document.getElementById('processing-banner-fill');
+    const count = document.getElementById('processing-banner-count');
+    const statusUrl = @json(route('admin.media.processing-status'));
+    let timer = null;
+
+    function formatEta(minutes) {
+      if (minutes === null) return 'estimation en cours…';
+      if (minutes < 1) return 'moins d\'une minute restante';
+      if (minutes < 60) return `~${minutes} min restantes`;
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      return `~${hours} h${rest ? ' ' + rest + ' min' : ''} restantes`;
+    }
+
+    function poll() {
+      fetch(statusUrl, { headers: { Accept: 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.pending > 0) {
+            banner.hidden = false;
+            banner.classList.remove('is-done');
+            label.textContent = `Traitement des images (${formatEta(data.eta_minutes)})`;
+            fill.style.width = data.percent + '%';
+            count.textContent = `${data.processed} / ${data.total}`;
+            timer = setTimeout(poll, 4000);
+          } else if (!banner.hidden) {
+            banner.classList.add('is-done');
+            label.textContent = 'Traitement terminé';
+            fill.style.width = '100%';
+            count.textContent = `${data.total} / ${data.total}`;
+            setTimeout(() => { banner.hidden = true; }, 4000);
+          }
+        })
+        .catch(() => {});
+    }
+
+    poll();
+    window.addEventListener('beforeunload', () => { if (timer) clearTimeout(timer); });
+  })();
 </script>
 
 </body>
