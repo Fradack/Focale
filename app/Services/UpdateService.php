@@ -98,6 +98,7 @@ class UpdateService
 
         $releaseRoot = $this->findReleaseRoot($tmpExtract);
         $swapped = [];
+        $publicBuildSwapped = false;
 
         try {
             foreach (self::UPDATABLE_PATHS as $path) {
@@ -116,10 +117,30 @@ class UpdateService
 
                 File::copyDirectory($source, base_path($path));
             }
+
+            // Les assets compilés (CSS/JS) ne sont pas dans les UPDATABLE_PATHS
+            // ci-dessus (ils ne vivent pas sous base_path() sur un déploiement
+            // où public/ est hébergé ailleurs — voir bootstrap/public_path.php),
+            // mais ils font bien partie de la release et doivent être remplacés
+            // à chaque mise à jour, sinon le style ne suit jamais le code.
+            $publicBuildSource = $releaseRoot.'/public/build';
+            if (File::exists($publicBuildSource)) {
+                if (File::exists(public_path('build'))) {
+                    File::moveDirectory(public_path('build'), public_path('build').'.old', true);
+                    $publicBuildSwapped = true;
+                }
+
+                File::copyDirectory($publicBuildSource, public_path('build'));
+            }
         } catch (\Throwable $e) {
             foreach ($swapped as $path) {
                 File::deleteDirectory(base_path($path));
                 File::moveDirectory(base_path($path).'.old', base_path($path));
+            }
+
+            if ($publicBuildSwapped) {
+                File::deleteDirectory(public_path('build'));
+                File::moveDirectory(public_path('build').'.old', public_path('build'));
             }
 
             throw $e;
@@ -136,6 +157,10 @@ class UpdateService
 
         foreach ($swapped as $path) {
             File::deleteDirectory(base_path($path).'.old');
+        }
+
+        if ($publicBuildSwapped) {
+            File::deleteDirectory(public_path('build').'.old');
         }
 
         File::delete($tmpZip);
