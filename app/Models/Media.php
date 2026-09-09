@@ -68,6 +68,24 @@ class Media extends Model
             ->orderByPivot('sort_order');
     }
 
+    /**
+     * Retire cette œuvre de tous les albums qui la contiennent (mise à la
+     * corbeille) en réassignant la couverture des albums concernés.
+     */
+    public function removeFromAlbums(): void
+    {
+        $albumIds = $this->albums()->pluck('albums.id');
+
+        $this->albums()->detach();
+
+        Album::whereIn('id', $albumIds)
+            ->where('cover_media_id', $this->id)
+            ->get()
+            ->each(fn (Album $album) => $album->update(['cover_media_id' => $album->media()->first()?->id]));
+
+        Album::where('seo_image_id', $this->id)->update(['seo_image_id' => null]);
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);

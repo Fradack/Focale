@@ -76,6 +76,7 @@ class MediaController extends Controller
 
             case 'trash':
                 Media::whereIn('id', $data['ids'])->update(['trashed_at' => now()]);
+                $items->each(fn (Media $item) => $item->removeFromAlbums());
                 $message = count($items).' œuvre(s) mise(s) à la corbeille.';
                 break;
 
@@ -168,6 +169,7 @@ class MediaController extends Controller
     public function destroy(Media $media): RedirectResponse
     {
         $media->update(['trashed_at' => now()]);
+        $media->removeFromAlbums();
 
         return back()->with('status', 'media-trashed');
     }
