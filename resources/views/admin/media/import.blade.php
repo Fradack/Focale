@@ -6,6 +6,18 @@
     </div>
   </div>
 
+  <div class="alert alert-info alert-block">
+    <div>
+      <strong>Après l'envoi, les vignettes se génèrent en tâche de fond.</strong>
+      <div style="margin-top:4px;">
+        Ce traitement n'avance que pendant qu'une page de l'administration reste ouverte et active dans un onglet au premier plan
+        (les navigateurs ralentissent fortement les onglets en arrière-plan). Restez sur cette page, ou une autre page d'administration,
+        jusqu'à ce que la barre de progression en haut affiche 100% — sinon les œuvres restent visibles mais sans image tant que le traitement n'est pas terminé.
+        Pour un traitement fiable même onglet fermé, une tâche planifiée peut être configurée côté hébergement (demande-le si besoin).
+      </div>
+    </div>
+  </div>
+
   <div class="dropzone" id="dropzone">
     <svg viewBox="0 0 24 24"><path d="M12 3v14"></path><path d="M5 10l7-7 7 7"></path><path d="M5 21h14"></path></svg>
     <h2>Glissez vos images ici</h2>

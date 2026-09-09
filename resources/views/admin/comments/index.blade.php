@@ -35,7 +35,7 @@
             @else
               <button class="action-btn disabled" disabled>Approuvé</button>
             @endif
-            <form method="POST" action="{{ route('admin.comments.destroy', $comment) }}" onsubmit="return confirm('Supprimer ce commentaire ?');">
+            <form method="POST" action="{{ route('admin.comments.destroy', $comment) }}" data-confirm="Supprimer ce commentaire ?">
               @csrf
               @method('delete')
               <button type="submit" class="action-btn delete">Supprimer</button>

@@ -55,7 +55,7 @@
           @endforeach
         </select>
         <button type="submit" name="do" value="add_to_album" class="btn">Ajouter</button>
-        <button type="submit" name="do" value="trash" class="btn" style="color:var(--danger);border-color:var(--danger);margin-left:auto;" onsubmit="return confirm('Mettre ces œuvres à la corbeille ?');">Mettre à la corbeille</button>
+        <button type="submit" name="do" value="trash" class="btn" style="color:var(--danger);border-color:var(--danger);margin-left:auto;">Mettre à la corbeille</button>
       </div>
 
       @if ($view === 'list')
@@ -135,10 +135,16 @@
   });
 
   document.getElementById('bulk-form')?.addEventListener('submit', (e) => {
+    const form = e.currentTarget;
     const submitter = e.submitter;
-    if (submitter && submitter.value === 'trash' && !confirm('Mettre ces œuvres à la corbeille ?')) {
-      e.preventDefault();
-    }
+    if (!submitter || submitter.value !== 'trash' || form.dataset.confirmed === '1') return;
+
+    e.preventDefault();
+    confirmModal('Mettre ces œuvres à la corbeille ?').then((ok) => {
+      if (!ok) return;
+      form.dataset.confirmed = '1';
+      form.requestSubmit(submitter);
+    });
   });
 
   updateBulkBar();

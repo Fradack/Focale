@@ -167,17 +167,23 @@
 
   @if ($update['updateAvailable'])
     <script>
-      document.getElementById('apply-update-form').addEventListener('submit', function (e) {
-        if (! confirm('Une sauvegarde de la base et des fichiers sera créée avant la mise à jour. Continuer ?')) {
-          e.preventDefault();
+      const applyForm = document.getElementById('apply-update-form');
+      applyForm.addEventListener('submit', function (e) {
+        if (applyForm.dataset.confirmed === '1') {
+          const btn = document.getElementById('apply-update-btn');
+          btn.disabled = true;
+          btn.textContent = 'Mise à jour en cours…';
+          document.getElementById('update-progress').hidden = false;
+          window.onbeforeunload = () => 'Une mise à jour est en cours.';
           return;
         }
 
-        const btn = document.getElementById('apply-update-btn');
-        btn.disabled = true;
-        btn.textContent = 'Mise à jour en cours…';
-        document.getElementById('update-progress').hidden = false;
-        window.onbeforeunload = () => 'Une mise à jour est en cours.';
+        e.preventDefault();
+        confirmModal('Une sauvegarde de la base et des fichiers sera créée avant la mise à jour. Continuer ?').then((ok) => {
+          if (!ok) return;
+          applyForm.dataset.confirmed = '1';
+          applyForm.requestSubmit();
+        });
       });
     </script>
   @endif

@@ -121,7 +121,7 @@
         </div>
       </form>
 
-      <form method="POST" action="{{ route('admin.media.destroy', $media) }}" style="margin-top:14px;" onsubmit="return confirm('Mettre cette œuvre à la corbeille ?');">
+      <form method="POST" action="{{ route('admin.media.destroy', $media) }}" style="margin-top:14px;" data-confirm="Mettre cette œuvre à la corbeille ?">
         @csrf
         @method('delete')
         <button type="submit" class="btn" style="color:var(--danger);border-color:var(--danger);">Mettre à la corbeille</button>

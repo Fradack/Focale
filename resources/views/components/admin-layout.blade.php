@@ -76,7 +76,63 @@
   </main>
 </div>
 
+<div class="modal-overlay" id="confirm-modal-overlay" hidden>
+  <div class="modal-box">
+    <p id="confirm-modal-message"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="confirm-modal-cancel">Annuler</button>
+      <button type="button" class="btn primary" id="confirm-modal-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <script>
+  // Modale de confirmation réutilisable, à la place de window.confirm() —
+  // Chrome bloque de plus en plus agressivement les popups natifs répétés.
+  // confirmModal(message) renvoie une Promise<boolean>.
+  function confirmModal(message) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('confirm-modal-overlay');
+      document.getElementById('confirm-modal-message').textContent = message;
+      overlay.hidden = false;
+
+      const okBtn = document.getElementById('confirm-modal-ok');
+      const cancelBtn = document.getElementById('confirm-modal-cancel');
+
+      function cleanup(result) {
+        overlay.hidden = true;
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        overlay.removeEventListener('click', onOverlay);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', onOverlay);
+    });
+  }
+
+  // Convertit automatiquement tout <form data-confirm="…"> : le submit est
+  // intercepté, la modale s'affiche, et le formulaire n'est réellement
+  // soumis qu'après confirmation — plus besoin d'un onsubmit="confirm(...)"
+  // par formulaire.
+  document.querySelectorAll('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', function (e) {
+      if (form.dataset.confirmed === '1') return;
+      e.preventDefault();
+      confirmModal(form.dataset.confirm).then((ok) => {
+        if (ok) {
+          form.dataset.confirmed = '1';
+          form.requestSubmit ? form.requestSubmit(e.submitter || undefined) : form.submit();
+        }
+      });
+    });
+  });
+
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('.password-toggle');
     if (!btn) return;

@@ -64,7 +64,7 @@
                     @csrf
                     <button type="submit">Dupliquer</button>
                   </form>
-                  <form method="POST" action="{{ route('admin.albums.destroy', $album) }}" onsubmit="return confirm('Supprimer l\'album « {{ $album->title }} » ? Cette action est irréversible.');">
+                  <form method="POST" action="{{ route('admin.albums.destroy', $album) }}" data-confirm="Supprimer l'album « {{ $album->title }} » ? Cette action est irréversible.">
                     @csrf
                     @method('DELETE')
                     <button type="submit" style="color:var(--danger);">Supprimer</button>

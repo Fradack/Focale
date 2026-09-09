@@ -106,7 +106,7 @@
     </div>
   </form>
 
-  <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" style="max-width:640px;margin-top:20px;" onsubmit="return confirm('Supprimer définitivement cette page ?');">
+  <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" style="max-width:640px;margin-top:20px;" data-confirm="Supprimer définitivement cette page ?">
     @csrf
     @method('delete')
     <button type="submit" class="btn" style="color:var(--danger);border-color:var(--danger);">Supprimer cette page</button>

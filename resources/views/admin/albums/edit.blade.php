@@ -164,7 +164,7 @@
     @csrf
   </form>
   <form id="album-delete-form" method="POST" action="{{ route('admin.albums.destroy', $album) }}" hidden
-        onsubmit="return confirm('Supprimer l\'album « {{ $album->title }} » ? Cette action est irréversible.');">
+        data-confirm="Supprimer l'album « {{ $album->title }} » ? Cette action est irréversible.">
     @csrf
     @method('delete')
   </form>
@@ -262,8 +262,10 @@
 
     const removeBtn = item.querySelector('.remove-btn');
     removeBtn.addEventListener('click', () => {
-      if (!confirm('Retirer cette œuvre de l\'album ?')) return;
-      postJson(removeBtn.dataset.url, 'DELETE').then(() => item.remove());
+      confirmModal('Retirer cette œuvre de l\'album ?').then((ok) => {
+        if (!ok) return;
+        postJson(removeBtn.dataset.url, 'DELETE').then(() => item.remove());
+      });
     });
   }
 
