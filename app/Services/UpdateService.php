@@ -121,6 +121,15 @@ class UpdateService
             throw $e;
         }
 
+        // bootstrap/public_path.php (voir bootstrap/app.php) est un fichier propre
+        // à ce déploiement, jamais inclus dans une release : on le restaure après
+        // le remplacement du dossier bootstrap/, sinon un hébergement où public/
+        // vit hors de la racine de l'app perdrait ce réglage à chaque mise à jour.
+        $oldPublicPathOverride = base_path('bootstrap').'.old/public_path.php';
+        if (in_array('bootstrap', $swapped, true) && File::exists($oldPublicPathOverride)) {
+            File::copy($oldPublicPathOverride, base_path('bootstrap/public_path.php'));
+        }
+
         foreach ($swapped as $path) {
             File::deleteDirectory(base_path($path).'.old');
         }
