@@ -4,9 +4,10 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
+use PDO;
 use ZipArchive;
 
 class UpdateService
@@ -151,24 +152,68 @@ class UpdateService
         File::ensureDirectoryExists($dir);
         $timestamp = now()->format('Y-m-d_His');
 
-        $dbConfig = config('database.connections.'.config('database.default'));
-        $dumpPath = "{$dir}/db-{$timestamp}.sql";
-
-        // Process::run() ne redirige pas nativement stdout vers un fichier :
-        // on passe par une commande shell complète pour le pipe "> fichier".
-        $result = Process::run(sprintf(
-            '%s -h %s -P %s -u %s --password=%s %s > %s',
-            escapeshellarg(config('focale.mysqldump_path')),
-            escapeshellarg($dbConfig['host']),
-            escapeshellarg((string) $dbConfig['port']),
-            escapeshellarg($dbConfig['username']),
-            escapeshellarg($dbConfig['password']),
-            escapeshellarg($dbConfig['database']),
-            escapeshellarg($dumpPath)
-        ));
-        $result->throw();
-
+        $this->dumpDatabase("{$dir}/db-{$timestamp}.sql");
         $this->zipCodebase("{$dir}/code-{$timestamp}.zip");
+    }
+
+    /**
+     * Dump SQL en PHP pur (via PDO), sans dépendre du binaire `mysqldump` ni
+     * de `proc_open` : beaucoup d'hébergements mutualisés désactivent
+     * l'exécution de processus externes pour des raisons de sécurité.
+     */
+    private function dumpDatabase(string $path): void
+    {
+        $pdo = DB::connection()->getPdo();
+        $database = config('database.connections.'.config('database.default').'.database');
+
+        $handle = fopen($path, 'w');
+        fwrite($handle, "-- Focale backup — {$database} — ".now()->toDateTimeString()."\n");
+        fwrite($handle, "SET FOREIGN_KEY_CHECKS=0;\n\n");
+
+        $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+
+        foreach ($tables as $table) {
+            $createRow = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch(PDO::FETCH_ASSOC);
+            $createSql = $createRow['Create Table'] ?? null;
+
+            if (! $createSql) {
+                continue;
+            }
+
+            fwrite($handle, "DROP TABLE IF EXISTS `{$table}`;\n{$createSql};\n\n");
+
+            $count = (int) $pdo->query("SELECT COUNT(*) FROM `{$table}`")->fetchColumn();
+            if ($count === 0) {
+                continue;
+            }
+
+            $batchSize = 500;
+            $columns = null;
+
+            for ($offset = 0; $offset < $count; $offset += $batchSize) {
+                $rows = $pdo->query("SELECT * FROM `{$table}` LIMIT {$batchSize} OFFSET {$offset}")
+                    ->fetchAll(PDO::FETCH_ASSOC);
+
+                if (! $rows) {
+                    break;
+                }
+
+                $columns ??= array_map(fn ($c) => "`{$c}`", array_keys($rows[0]));
+
+                $values = array_map(
+                    fn ($row) => '('.implode(',', array_map(
+                        fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v),
+                        $row
+                    )).')',
+                    $rows
+                );
+
+                fwrite($handle, "INSERT INTO `{$table}` (".implode(',', $columns).") VALUES\n".implode(",\n", $values).";\n\n");
+            }
+        }
+
+        fwrite($handle, "SET FOREIGN_KEY_CHECKS=1;\n");
+        fclose($handle);
     }
 
     private function zipCodebase(string $destination): void
