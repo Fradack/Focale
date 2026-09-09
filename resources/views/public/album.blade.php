@@ -402,8 +402,15 @@
 
     function poll() {
       fetch(statusUrl, { headers: { Accept: 'application/json' } })
-        .then(r => r.json())
+        .then(r => (r.ok ? r.json() : null))
         .then(data => {
+          // Réponse absente ou de forme inattendue : on réessaie plus tard
+          // plutôt que de recharger la page à tort.
+          if (! data || typeof data.total !== 'number' || typeof data.pending !== 'number') {
+            setTimeout(poll, 10000);
+            return;
+          }
+
           if (data.pending > 0) {
             fill.style.width = data.percent + '%';
             count.textContent = `${data.processed} / ${data.total}`;
@@ -413,7 +420,7 @@
             location.reload();
           }
         })
-        .catch(() => {});
+        .catch(() => { setTimeout(poll, 10000); });
     }
 
     setTimeout(poll, 5000);

@@ -1,13 +1,11 @@
 <x-admin-layout :active="'albums'" :title="$album->title">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <a href="{{ route('admin.albums.index') }}" class="back-link" style="display:inline-flex;font-size:13px;color:var(--ink-soft);margin-bottom:18px;">← Albums</a>
-    <form method="POST" action="{{ route('admin.albums.duplicate', $album) }}">
-      @csrf
-      <button type="submit" class="btn">Dupliquer</button>
-    </form>
-  </div>
+  <a href="{{ route('admin.albums.index') }}" class="back-link" style="display:inline-flex;font-size:13px;color:var(--ink-soft);margin-bottom:18px;">← Albums</a>
 
-  <form method="POST" action="{{ route('admin.albums.update', $album) }}">
+  @if (session('status') === 'album-updated')
+    <div class="alert alert-success">Enregistré.</div>
+  @endif
+
+  <form method="POST" action="{{ route('admin.albums.update', $album) }}" id="album-form">
     @csrf
     @method('put')
 
@@ -52,15 +50,7 @@
           <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">Transmets ce mot de passe directement aux personnes concernées — la page n'est pas indexée par les moteurs de recherche.</p>
         </div>
       </div>
-      <div style="display:flex;gap:10px;flex-shrink:0;">
-        <a href="{{ route('public.album', $album) }}" class="btn" target="_blank">Aperçu</a>
-        <button type="submit" class="btn primary">Enregistrer</button>
-      </div>
     </div>
-
-    @if (session('status') === 'album-updated')
-      <p style="font-size:13px;color:var(--ok);margin:-18px 0 20px;">Enregistré.</p>
-    @endif
 
     <div style="display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:start;">
       <div>
@@ -109,6 +99,13 @@
             <label>Description SEO</label>
             <textarea name="seo_description" id="seo-desc" @disabled($album->seo_auto)>{{ old('seo_description', $album->seo_description) }}</textarea>
           </div>
+        </div>
+
+        <div class="panel" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="{{ route('public.album', $album) }}" class="btn" target="_blank">Aperçu</a>
+          <button type="submit" class="btn primary">Enregistrer</button>
+          <button type="submit" form="album-duplicate-form" class="btn">Dupliquer</button>
+          <button type="submit" form="album-delete-form" class="btn" style="color:var(--danger);border-color:var(--danger);margin-left:auto;">Supprimer</button>
         </div>
       </div>
 
@@ -161,6 +158,15 @@
         </div>
       </div>
     </div>
+  </form>
+
+  <form id="album-duplicate-form" method="POST" action="{{ route('admin.albums.duplicate', $album) }}" hidden>
+    @csrf
+  </form>
+  <form id="album-delete-form" method="POST" action="{{ route('admin.albums.destroy', $album) }}" hidden
+        onsubmit="return confirm('Supprimer l\'album « {{ $album->title }} » ? Cette action est irréversible.');">
+    @csrf
+    @method('delete')
   </form>
 
 <script>

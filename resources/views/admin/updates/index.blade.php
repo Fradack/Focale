@@ -4,16 +4,22 @@
   </div>
 
   @error('update')
-    <div class="panel" style="border-color:var(--danger);">
-      <p style="margin:0;color:var(--danger);font-size:14px;">{{ $message }}</p>
-    </div>
+    <div class="alert alert-danger">{{ $message }}</div>
   @enderror
 
   @if (session('status') === 'update-applied')
-    <div class="panel" style="border-color:var(--ok);">
-      <p style="margin:0;color:var(--ok);font-size:14px;">Mise à jour appliquée avec succès.</p>
-    </div>
+    <div class="alert alert-success">Mise à jour appliquée avec succès.</div>
   @endif
+
+  <div class="alert alert-info" id="update-progress" hidden>
+    <div style="width:100%;">
+      <strong>Mise à jour en cours…</strong>
+      <div style="margin-top:4px;">Ne quittez pas cette page et ne l'actualisez pas — l'opération peut prendre une minute.</div>
+      <div class="progress-indeterminate-track" style="margin-top:10px;">
+        <div class="progress-indeterminate-fill"></div>
+      </div>
+    </div>
+  </div>
 
   <div style="display:grid;grid-template-columns:{{ $update['updateAvailable'] ? '360px 1fr' : '480px' }};gap:20px;align-items:start;">
     <div class="panel">
@@ -41,9 +47,9 @@
         </form>
 
         @if ($update['updateAvailable'])
-          <form method="POST" action="{{ route('admin.updates.apply') }}" onsubmit="return confirm('Une sauvegarde de la base et des fichiers sera créée avant la mise à jour. Continuer ?');">
+          <form method="POST" action="{{ route('admin.updates.apply') }}" id="apply-update-form">
             @csrf
-            <button type="submit" class="btn primary">Mettre à jour</button>
+            <button type="submit" class="btn primary" id="apply-update-btn">Mettre à jour</button>
           </form>
         @endif
       </div>
@@ -76,4 +82,21 @@
       </div>
     @endif
   </div>
+
+  @if ($update['updateAvailable'])
+    <script>
+      document.getElementById('apply-update-form').addEventListener('submit', function (e) {
+        if (! confirm('Une sauvegarde de la base et des fichiers sera créée avant la mise à jour. Continuer ?')) {
+          e.preventDefault();
+          return;
+        }
+
+        const btn = document.getElementById('apply-update-btn');
+        btn.disabled = true;
+        btn.textContent = 'Mise à jour en cours…';
+        document.getElementById('update-progress').hidden = false;
+        window.onbeforeunload = () => 'Une mise à jour est en cours.';
+      });
+    </script>
+  @endif
 </x-admin-layout>

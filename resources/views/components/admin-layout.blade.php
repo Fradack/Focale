@@ -107,8 +107,16 @@
 
     function poll() {
       fetch(statusUrl, { headers: { Accept: 'application/json' } })
-        .then(r => r.json())
+        .then(r => (r.ok ? r.json() : null))
         .then(data => {
+          // Réponse absente ou de forme inattendue (session expirée, erreur
+          // serveur…) : on ignore ce sondage sans toucher à l'état affiché,
+          // plutôt que de risquer d'afficher un faux "terminé".
+          if (! data || typeof data.total !== 'number' || typeof data.pending !== 'number') {
+            timer = setTimeout(poll, 8000);
+            return;
+          }
+
           if (data.pending > 0) {
             banner.hidden = false;
             banner.classList.remove('is-done');
@@ -124,7 +132,7 @@
             setTimeout(() => { banner.hidden = true; }, 4000);
           }
         })
-        .catch(() => {});
+        .catch(() => { timer = setTimeout(poll, 8000); });
     }
 
     poll();

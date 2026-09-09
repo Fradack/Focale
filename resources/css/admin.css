@@ -526,6 +526,34 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 .processing-banner-count { flex-shrink: 0; font-weight: 500; white-space: nowrap; }
 .processing-banner.is-done .processing-banner-fill { background: var(--ok); }
 
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.alert-success { background: #EEF3EC; border-color: var(--ok); color: var(--ok); }
+.alert-danger { background: #F8ECEA; border-color: var(--danger); color: var(--danger); }
+.alert-info { background: var(--panel); border-color: var(--line); color: var(--ink); }
+
+.progress-indeterminate-track { width: 100%; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress-indeterminate-fill {
+  height: 100%;
+  width: 40%;
+  background: var(--clay);
+  border-radius: 999px;
+  animation: progress-indeterminate 1.2s ease-in-out infinite;
+}
+@keyframes progress-indeterminate {
+  0% { margin-left: -40%; }
+  100% { margin-left: 100%; }
+}
+
 @media (max-width: 960px) {
   .stats { grid-template-columns: 1fr; }
   .content-grid { grid-template-columns: 1fr; }
