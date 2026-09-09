@@ -75,7 +75,45 @@
 
         <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.03em;color:var(--ink-soft);margin:0 0 10px;">Notes de version</h3>
         @if ($update['notes'])
-          <div style="font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;">{{ $update['notes'] }}</div>
+          @php
+            // Les notes viennent du corps de la release GitHub, en texte brut
+            // (jamais de HTML, pour éviter d'injecter du contenu non fiable) —
+            // on structure juste ce qui ressemble à des puces ou des
+            // paragraphes séparés par une ligne vide.
+            $blocks = [];
+            $currentList = [];
+            foreach (preg_split('/\r\n|\r|\n/', trim($update['notes'])) as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                if (str_starts_with($line, '- ') || str_starts_with($line, '* ')) {
+                    $currentList[] = ltrim(substr($line, 2));
+                    continue;
+                }
+                if ($currentList) {
+                    $blocks[] = ['list', $currentList];
+                    $currentList = [];
+                }
+                $blocks[] = ['p', $line];
+            }
+            if ($currentList) {
+                $blocks[] = ['list', $currentList];
+            }
+          @endphp
+          <div style="font-size:14px;line-height:1.7;color:var(--ink);">
+            @foreach ($blocks as [$kind, $content])
+              @if ($kind === 'list')
+                <ul style="margin:0 0 12px;padding-left:20px;">
+                  @foreach ($content as $item)
+                    <li style="margin-bottom:4px;">{{ $item }}</li>
+                  @endforeach
+                </ul>
+              @else
+                <p style="margin:0 0 12px;">{{ $content }}</p>
+              @endif
+            @endforeach
+          </div>
         @else
           <p style="font-size:13px;color:var(--ink-soft);margin:0;">Aucune note de version fournie pour cette release.</p>
         @endif
