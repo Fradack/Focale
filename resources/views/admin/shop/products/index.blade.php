@@ -10,6 +10,8 @@
     </form>
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'products'])
+
   <form class="toolbar" method="GET">
     <a href="{{ route('admin.shop.products.index') }}" class="filter-chip {{ ! request('status') ? 'active' : '' }}">Tous ({{ $counts['all'] }})</a>
     <a href="{{ route('admin.shop.products.index', ['status' => 'published']) }}" class="filter-chip {{ request('status') === 'published' ? 'active' : '' }}">Publiés ({{ $counts['published'] }})</a>

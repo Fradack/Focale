@@ -3,6 +3,8 @@
     <h1>Commandes</h1>
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'orders'])
+
   <form class="toolbar" method="GET">
     <a href="{{ route('admin.shop.orders.index') }}" class="filter-chip {{ ! request('status') ? 'active' : '' }}">Toutes ({{ $counts['all'] }})</a>
     @foreach (\App\Models\Order::STATUSES as $key => $label)

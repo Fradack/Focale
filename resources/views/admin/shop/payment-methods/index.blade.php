@@ -3,6 +3,8 @@
     <h1>Moyens de paiement</h1>
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'payment'])
+
   <p style="font-size:13px;color:var(--ink-soft);max-width:640px;margin:-8px 0 20px;">
     Aucune passerelle de paiement en ligne n'est branchée : chaque moyen ci-dessous s'affiche au client au moment de la commande avec ses instructions, et la commande est marquée « Payée » manuellement depuis <a href="{{ route('admin.shop.orders.index') }}" style="text-decoration:underline;">Commandes</a> une fois le règlement reçu.
     Pour « PayPal.me », un code de commande est automatiquement ajouté aux instructions du client — inutile de le rédiger toi-même.

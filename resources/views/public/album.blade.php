@@ -138,10 +138,12 @@
   @if ($album->media->count() > 1)
     <button class="slideshow-btn" id="slideshow-btn">Lancer le diaporama</button>
   @endif
-  <button type="button" id="album-like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
-    <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
-    <span id="album-like-count">{{ $album->likes()->count() }}</span>
-  </button>
+  @if (\App\Support\Plugins::enabled('likes'))
+    <button type="button" id="album-like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+      <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
+      <span id="album-like-count">{{ $album->likes()->count() }}</span>
+    </button>
+  @endif
 </div>
 
 @if ($processingStatus['pending'] > 0)
@@ -418,6 +420,7 @@
 </script>
 
 <script>
+  @if (\App\Support\Plugins::enabled('likes'))
   (function () {
     const btn = document.getElementById('album-like-btn');
     const icon = btn.querySelector('i');
@@ -444,6 +447,7 @@
         .finally(() => { busy = false; });
     });
   })();
+  @endif
 </script>
 
 @if ($processingStatus['pending'] > 0)

@@ -6,10 +6,12 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\LegalDocumentController;
+use App\Http\Controllers\Admin\LikeSettingController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
+use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\SettingController;
@@ -23,6 +25,7 @@ use App\Http\Controllers\Install\InstallController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\AlbumController as PublicAlbumController;
 use App\Http\Controllers\Public\CartController;
+use App\Http\Controllers\Public\ConsentController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\FaqController;
 use App\Http\Controllers\Public\HomeController;
@@ -64,12 +67,12 @@ Route::middleware(['maintenance', 'visit-log'])->group(function () {
         ->middleware('throttle:5,1')
         ->name('public.album.comment');
     Route::post('/album/{album:slug}/aimer', [PublicAlbumController::class, 'toggleLike'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'likes_enabled'])
         ->name('public.album.like');
     Route::get('/galerie', [PublicImageController::class, 'index'])->name('public.gallery');
     Route::get('/image/{media:slug}', [PublicImageController::class, 'show'])->name('public.image');
     Route::post('/image/{media:slug}/aimer', [PublicImageController::class, 'toggleLike'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'likes_enabled'])
         ->name('public.image.like');
     Route::post('/image/{media:slug}/vue', [PublicImageController::class, 'recordView'])
         ->middleware('throttle:30,1')
@@ -93,6 +96,8 @@ Route::middleware(['maintenance', 'visit-log'])->group(function () {
     Route::post('/contact', [ContactController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('public.contact.store');
+
+    Route::post('/consentement-cookies', [ConsentController::class, 'store'])->name('public.consent.store');
 });
 
 // Administration — 'staff' bloque les comptes client (voir EnsureIsStaff) :
@@ -188,6 +193,13 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::post('mises-a-jour/verifier', [UpdateController::class, 'check'])->name('updates.check');
     Route::post('mises-a-jour/appliquer', [UpdateController::class, 'apply'])->name('updates.apply');
 
+    Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
+    Route::post('plugins/{slug}/installer', [PluginController::class, 'install'])->name('plugins.install');
+    Route::post('plugins/{slug}/activer', [PluginController::class, 'enable'])->name('plugins.enable');
+    Route::post('plugins/{slug}/desactiver', [PluginController::class, 'disable'])->name('plugins.disable');
+
+    Route::get('likes', [LikeSettingController::class, 'index'])->name('likes.index');
+
     Route::get('profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
 });
@@ -217,6 +229,14 @@ Route::prefix('compte')->name('customer.')->group(function () {
         Route::get('commandes/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
     });
 });
+
+// Routes ajoutées par les plugins installés (voir App\Services\PluginManager).
+// Chaque fichier commence par un garde sur son propre statut d'activation.
+// Placé avant le catch-all générique ci-dessous pour ne jamais s'y faire
+// masquer.
+foreach (glob(base_path('routes/plugins/*.php')) as $pluginRouteFile) {
+    require $pluginRouteFile;
+}
 
 // Doit rester la toute dernière route : capture les pages de contenu génériques
 // et ne doit donc jamais passer avant /administration/... ou les autres routes publiques.

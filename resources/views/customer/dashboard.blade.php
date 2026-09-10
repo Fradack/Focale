@@ -15,7 +15,7 @@
   a { color: inherit; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 24px 6vw; border-bottom: 1px solid var(--line); }
   .wordmark { font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; text-decoration: none; }
-  main { max-width: 560px; margin: 8vh auto; padding: 0 6vw; }
+  main { max-width: 1680px; margin: 8vh auto; padding: 0 6vw; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 28px; margin: 0 0 8px; }
   p { color: var(--ink-soft); line-height: 1.6; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-top: 24px; }

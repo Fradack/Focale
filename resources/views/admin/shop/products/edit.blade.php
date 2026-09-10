@@ -8,6 +8,8 @@
     @endif
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'products'])
+
   <form method="POST" action="{{ route('admin.shop.products.update', $product) }}" style="max-width:720px;">
     @csrf
     @method('PUT')

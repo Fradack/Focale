@@ -34,26 +34,16 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path></svg>
         Albums
       </a>
-      <a href="{{ route('admin.shop.products.index') }}" class="{{ $active === 'shop-products' ? 'active' : '' }}">
-        <svg viewBox="0 0 24 24"><path d="M6 2l1.5 5h9L18 2"></path><path d="M3.5 7h17l-1.3 13a2 2 0 01-2 1.8H6.8a2 2 0 01-2-1.8L3.5 7z"></path></svg>
-        Produits
-      </a>
-      <a href="{{ route('admin.shop.orders.index') }}" class="{{ $active === 'shop-orders' ? 'active' : '' }}">
-        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
-        Commandes
-        @php($pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count())
-        @if($pendingOrdersCount > 0)
-          <span class="count">{{ $pendingOrdersCount }}</span>
-        @endif
-      </a>
-      <a href="{{ route('admin.shop.payment-methods.index') }}" class="{{ $active === 'shop-payment' ? 'active' : '' }}">
-        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>
-        Paiement
-      </a>
-      <a href="{{ route('admin.shop.shipping-options.index') }}" class="{{ $active === 'shop-shipping' ? 'active' : '' }}">
-        <svg viewBox="0 0 24 24"><rect x="1" y="7" width="14" height="10"></rect><path d="M15 10h4l4 4v3h-8z"></path><circle cx="6" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle></svg>
-        Livraison
-      </a>
+      @if (\App\Support\Plugins::enabled('boutique'))
+        <a href="{{ route('admin.shop.products.index') }}" class="{{ str_starts_with($active ?? '', 'shop-') ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24"><path d="M6 2l1.5 5h9L18 2"></path><path d="M3.5 7h17l-1.3 13a2 2 0 01-2 1.8H6.8a2 2 0 01-2-1.8L3.5 7z"></path></svg>
+          Boutique <x-plugin-badge/>
+          @php($pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count())
+          @if($pendingOrdersCount > 0)
+            <span class="count">{{ $pendingOrdersCount }}</span>
+          @endif
+        </a>
+      @endif
       <a href="{{ route('admin.pages.index') }}" class="{{ $active === 'pages' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path></svg>
         Pages
@@ -93,6 +83,22 @@
       <a href="{{ route('admin.updates.index') }}" class="{{ $active === 'updates' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3.5-7.14"></path><path d="M21 3v6h-6"></path></svg>
         Mises à jour
+      </a>
+      @if (\App\Support\Plugins::enabled('likes'))
+        <a href="{{ route('admin.likes.index') }}" class="{{ $active === 'likes' ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"></path></svg>
+          J'aime <x-plugin-badge/>
+        </a>
+      @endif
+      @if (\App\Support\Plugins::enabled('tracking'))
+        <a href="{{ route('admin.tracking.index') }}" class="{{ $active === 'tracking' ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M7 15l4-6 4 3 5-8"></path></svg>
+          Tracking <x-plugin-badge/>
+        </a>
+      @endif
+      <a href="{{ route('admin.plugins.index') }}" class="{{ $active === 'plugins' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"></rect><rect x="13" y="4" width="7" height="7" rx="1"></rect><rect x="4" y="13" width="7" height="7" rx="1"></rect><rect x="13" y="13" width="7" height="7" rx="1"></rect></svg>
+        Plugins
       </a>
     </nav>
 

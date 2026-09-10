@@ -110,7 +110,7 @@ class UpdateService
         $zip->extractTo($tmpExtract);
         $zip->close();
 
-        $releaseRoot = $this->findReleaseRoot($tmpExtract);
+        $releaseRoot = \App\Support\GithubRelease::findExtractedRoot($tmpExtract);
         $swapped = [];
         $publicBuildSwapped = false;
 
@@ -353,15 +353,6 @@ class UpdateService
         }
 
         $zip->close();
-    }
-
-    private function findReleaseRoot(string $extractPath): string
-    {
-        $entries = File::directories($extractPath);
-
-        // Les archives GitHub extraient toujours dans un unique sous-dossier
-        // nommé "depot-tag/".
-        return count($entries) === 1 ? $entries[0] : $extractPath;
     }
 
     private function updateVersionConfig(string $version): void

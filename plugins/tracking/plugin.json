@@ -1,0 +1,6 @@
+{
+    "slug": "tracking",
+    "label": "Tracking",
+    "description": "Statistiques de visite avancées : géolocalisation approximative par IP, type d'appareil, temps passé par page.",
+    "version": "1.0.0"
+}

@@ -3,6 +3,8 @@
     <h1>Options de livraison</h1>
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'shipping'])
+
   <p style="font-size:13px;color:var(--ink-soft);max-width:640px;margin:-8px 0 20px;">
     Tarifs fixes uniquement — pas de calcul automatique par poids ou par zone. Le client choisit l'une de ces options au moment de la commande.
   </p>

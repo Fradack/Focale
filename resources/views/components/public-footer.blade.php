@@ -23,9 +23,15 @@
     @if ($twitter)
       <a href="{{ $twitter }}" target="_blank" rel="noopener">Twitter / X</a>
     @endif
+    @if (\App\Support\Plugins::enabled('tracking'))
+      <a href="#" id="cookie-reopen-link">Cookies</a>
+    @endif
     <a href="{{ route('login') }}">Administration</a>
   </div>
   <div class="site-footer-bottom">
     <span>{{ $footerCopyright }}</span>
   </div>
 </footer>
+
+<x-cookie-consent-banner/>
+@includeIf('plugins.tracking.beacon')

@@ -15,7 +15,7 @@ class SettingController extends Controller
         'site_name', 'artist_name', 'bio', 'contact_email',
         'social_instagram', 'social_twitter', 'maintenance_mode',
         'home_cover_media_id', 'turnstile_site_key', 'turnstile_secret_key',
-        'footer_copyright', 'theme_admin', 'theme_public', 'shop_enabled',
+        'footer_copyright', 'theme_admin', 'theme_public',
     ];
 
     public function edit(): View
@@ -46,11 +46,9 @@ class SettingController extends Controller
             'footer_copyright' => ['nullable', 'string', 'max:255'],
             'theme_admin' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
             'theme_public' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
-            'shop_enabled' => ['nullable', 'boolean'],
         ]);
 
         $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
-        $data['shop_enabled'] = $request->boolean('shop_enabled') ? '1' : '0';
         $data['theme_admin'] = $data['theme_admin'] ?? 'light';
         $data['theme_public'] = $data['theme_public'] ?? 'light';
 

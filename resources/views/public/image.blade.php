@@ -103,10 +103,12 @@
     @endif
     <h1>{{ $media->title ?: 'Photographie' }}</h1>
 
-    <button type="button" id="like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
-      <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
-      <span id="like-count">{{ $media->likes()->count() }}</span>
-    </button>
+    @if (\App\Support\Plugins::enabled('likes'))
+      <button type="button" id="like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+        <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
+        <span id="like-count">{{ $media->likes()->count() }}</span>
+      </button>
+    @endif
 
     @if ($media->description)
       <p class="description">{{ $media->description }}</p>
@@ -160,6 +162,7 @@
 </footer>
 
 <script>
+  @if (\App\Support\Plugins::enabled('likes'))
   (function () {
     const btn = document.getElementById('like-btn');
     const icon = btn.querySelector('i');
@@ -186,6 +189,7 @@
         .finally(() => { busy = false; });
     });
   })();
+  @endif
 
   // Une vue n'est comptabilisée qu'après 10s passées sur la page — pas au
   // simple chargement — pour refléter une vraie consultation de la photo.

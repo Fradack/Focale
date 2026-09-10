@@ -6,6 +6,8 @@
     <span class="pill {{ $order->status }}">{{ $order->statusLabel() }}</span>
   </div>
 
+  @include('admin.shop._subnav', ['active' => 'orders'])
+
   <div class="settings-grid">
     <div class="panel">
       <h2>Articles</h2>

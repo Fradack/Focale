@@ -102,19 +102,6 @@
       </div>
 
       <div class="panel">
-        <h2>Boutique</h2>
-        <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
-          <input type="checkbox" name="shop_enabled" value="1" @checked($values['shop_enabled'] === '1')>
-          Activer la boutique (affiche le lien « Boutique » dans la navigation et rend /boutique et /panier accessibles)
-        </label>
-        <p style="font-size:12px;color:var(--ink-soft);margin:12px 0 0;">
-          Gestion des articles, moyens de paiement, options de livraison et commandes depuis
-          <a href="{{ route('admin.shop.products.index') }}" style="text-decoration:underline;">Boutique → Produits</a>
-          dans le menu.
-        </p>
-      </div>
-
-      <div class="panel">
         <h2>Apparence</h2>
         <div class="field-row">
           <div class="field">
