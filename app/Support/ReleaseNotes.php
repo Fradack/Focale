@@ -19,6 +19,35 @@ class ReleaseNotes
     ];
 
     /**
+     * Synonymes fréquents ne correspondant à aucun des 4 mots-clés
+     * canoniques ci-dessus, mais dont l'intention est claire — rattachés au
+     * badge le plus proche plutôt que de n'afficher aucune couleur.
+     */
+    private const ALIASES = [
+        'ajustement' => 'information',
+        'amélioration' => 'ajout',
+        'amelioration' => 'ajout',
+        'optimisation' => 'ajout',
+        'renommage' => 'information',
+        'retrait' => 'suppression',
+        'suppression de' => 'suppression',
+        'correctif' => 'correction',
+        'fix' => 'correction',
+    ];
+
+    /**
+     * Mots-clés cherchés n'importe où dans le texte (pas seulement en
+     * préfixe) quand rien ci-dessus n'a matché — dernier recours avant le
+     * badge neutre par défaut, pour qu'une ligne n'affiche jamais aucune
+     * couleur du tout.
+     */
+    private const KEYWORD_HINTS = [
+        'suppression' => ['supprim', 'retiré', 'retire', 'retrait'],
+        'correction' => ['corrig', 'bug', 'erreur', 'plantage', 'cassé', 'casse'],
+        'ajout' => ['ajout', 'nouveau', 'nouvelle', 'amélior', 'amelior', 'optimis'],
+    ];
+
+    /**
      * @return array<int, array{0: string, 1: mixed}> paires [kind, content] — kind vaut 'list' (content = liste de ['badge'=>?array,'text'=>string]) ou 'p' (content = ['badge'=>?array,'text'=>string])
      */
     public static function parse(?string $notes): array
@@ -64,16 +93,32 @@ class ReleaseNotes
     }
 
     /**
-     * @return array{badge: ?array{label: string, class: string}, text: string}
+     * @return array{badge: array{label: string, class: string}, text: string}
      */
     private static function parseLine(string $line): array
     {
-        $pattern = '/^('.implode('|', array_keys(self::BADGES)).')\s*:\s*(.+)$/iu';
-
-        if (preg_match($pattern, $line, $m)) {
+        $canonicalPattern = '/^('.implode('|', array_keys(self::BADGES)).')\s*:\s*(.+)$/iu';
+        if (preg_match($canonicalPattern, $line, $m)) {
             return ['badge' => self::BADGES[mb_strtolower($m[1])], 'text' => $m[2]];
         }
 
-        return ['badge' => null, 'text' => $line];
+        $aliasPattern = '/^('.implode('|', array_map(fn ($a) => preg_quote($a, '/'), array_keys(self::ALIASES))).')\s*:\s*(.+)$/iu';
+        if (preg_match($aliasPattern, $line, $m)) {
+            return ['badge' => self::BADGES[self::ALIASES[mb_strtolower($m[1])]], 'text' => $m[2]];
+        }
+
+        // Toujours une couleur, même sans préfixe reconnu : on devine la
+        // catégorie la plus probable à partir de mots-clés présents dans le
+        // texte, plutôt que de laisser la ligne sans badge du tout.
+        $haystack = mb_strtolower($line);
+        foreach (self::KEYWORD_HINTS as $category => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($haystack, $keyword)) {
+                    return ['badge' => self::BADGES[$category], 'text' => $line];
+                }
+            }
+        }
+
+        return ['badge' => self::BADGES['information'], 'text' => $line];
     }
 }
