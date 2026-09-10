@@ -108,6 +108,12 @@
           Tracking <x-plugin-badge/>
         </a>
       @endif
+      @if (\App\Support\Plugins::enabled('avis') && \Illuminate\Support\Facades\Route::has('admin.avis.index'))
+        <a href="{{ route('admin.avis.index') }}" class="{{ $active === 'avis' ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.8 1.4 6.8L12 17.3 5.9 20.7l1.4-6.8-5.1-4.8 6.9-.8z"></path></svg>
+          Avis <x-plugin-badge/>
+        </a>
+      @endif
       <a href="{{ route('admin.plugins.index') }}" class="{{ $active === 'plugins' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"></rect><rect x="13" y="4" width="7" height="7" rx="1"></rect><rect x="4" y="13" width="7" height="7" rx="1"></rect><rect x="13" y="13" width="7" height="7" rx="1"></rect></svg>
         Plugins

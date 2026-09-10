@@ -14,17 +14,35 @@ use Illuminate\Support\Facades\Cache;
  */
 class Plugins
 {
+    /**
+     * Les fichiers routes/plugins/{slug}.php appellent cette méthode dès leur
+     * chargement (avant même le routage), y compris pendant `artisan migrate`
+     * lui-même (le framework enregistre les routes au boot, quelle que soit
+     * la commande) — sur une base tout juste créée, ni la table `plugins` ni
+     * la table `cache` n'existent encore à cet instant précis. Sans ce
+     * try/catch, un plugin réellement installé rendrait `artisan migrate`
+     * (et toute la suite de tests) impossible à exécuter sur une base
+     * fraîche.
+     */
     public static function enabled(string $slug): bool
     {
-        return (bool) Cache::rememberForever(
-            "plugin:{$slug}:enabled",
-            fn () => (bool) Plugin::where('slug', $slug)->value('enabled')
-        );
+        try {
+            return (bool) Cache::rememberForever(
+                "plugin:{$slug}:enabled",
+                fn () => (bool) Plugin::where('slug', $slug)->value('enabled')
+            );
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function installed(string $slug): bool
     {
-        return Plugin::whereKey($slug)->whereNotNull('installed_at')->exists();
+        try {
+            return Plugin::whereKey($slug)->whereNotNull('installed_at')->exists();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function forget(string $slug): void

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
+use App\Http\Controllers\Admin\PhotoEditController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
@@ -119,6 +120,10 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::delete('mediatheque/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
     Route::post('mediatheque/{media}/restaurer', [MediaController::class, 'restore'])->name('media.restore');
     Route::post('mediatheque/{media}/reessayer', [MediaController::class, 'retry'])->name('media.retry');
+    Route::get('mediatheque/{media}/original', [PhotoEditController::class, 'original'])->name('media.original');
+    Route::get('mediatheque/{media}/editer-image', [PhotoEditController::class, 'edit'])->name('media.edit-image');
+    Route::post('mediatheque/{media}/editer-image', [PhotoEditController::class, 'apply'])->name('media.edit-image.apply');
+    Route::post('mediatheque/{media}/editer-image/revenir', [PhotoEditController::class, 'revert'])->name('media.edit-image.revert');
 
     Route::get('albums', [AlbumController::class, 'index'])->name('albums.index');
     Route::post('albums', [AlbumController::class, 'store'])->name('albums.create');

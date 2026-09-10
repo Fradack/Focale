@@ -26,6 +26,9 @@
     @if (\App\Support\Plugins::enabled('tracking'))
       <a href="#" id="cookie-reopen-link">Cookies</a>
     @endif
+    @if (\App\Support\Plugins::enabled('avis') && \Illuminate\Support\Facades\Route::has('public.avis.create'))
+      <a href="{{ route('public.avis.create') }}">Donner mon avis</a>
+    @endif
     <a href="{{ route('login') }}">Administration</a>
   </div>
   <div class="site-footer-bottom">

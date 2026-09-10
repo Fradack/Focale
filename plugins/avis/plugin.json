@@ -1,0 +1,6 @@
+{
+    "slug": "avis",
+    "label": "Avis",
+    "description": "Recueille l'avis des visiteurs/clients via un questionnaire personnalisable, consultable depuis l'admin.",
+    "version": "1.0.0"
+}

@@ -29,7 +29,7 @@ class Media extends Model
         'uuid', 'title', 'slug', 'alt_text', 'caption', 'description',
         'credit', 'copyright', 'author', 'license', 'taken_at', 'location',
         'gps_lat', 'gps_lng', 'hide_gps', 'exif', 'exif_hidden_fields', 'mime_type', 'disk_path',
-        'filesize', 'width', 'height', 'checksum', 'status', 'trashed_at',
+        'original_backup_path', 'filesize', 'width', 'height', 'checksum', 'status', 'trashed_at',
     ];
 
     protected function casts(): array

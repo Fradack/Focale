@@ -60,8 +60,8 @@
   .like-btn:hover { border-color: var(--clay); }
   .like-btn i { color: #DC2626; font-size: 15px; }
   .like-btn[aria-pressed="true"] { border-color: #DC2626; }
-  .viewer { max-width: 1120px; margin: 0 auto; padding: 0 6vw; display: flex; align-items: center; gap: 48px; }
-  .viewer-media { flex: 1.6; min-width: 0; height: 66vh; display: flex; align-items: center; justify-content: center; background: var(--img-fallback); overflow: hidden; }
+  .viewer { max-width: 1120px; margin: 0 auto; padding: 0 6vw; display: flex; align-items: center; gap: 48px; position: relative; }
+  .viewer-media { flex: 1.6; min-width: 0; height: 66vh; display: flex; align-items: center; justify-content: center; background: var(--img-fallback); overflow: hidden; position: relative; }
   .viewer-media img { width: 100%; height: 100%; object-fit: contain; display: block; cursor: zoom-in; }
   .full-view { display: none; position: fixed; inset: 0; background: rgba(20, 18, 15, 0.95); z-index: 20; align-items: center; justify-content: center; padding: 4vh 4vw; }
   .full-view.open { display: flex; }
@@ -69,6 +69,16 @@
   .full-view-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: rgba(255,255,255,0.8); font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer; padding: 10px; }
   .full-view-close:hover { color: #fff; }
   .full-view-caption { position: absolute; bottom: 32px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.75); font-size: 13px; }
+  .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(20,18,15,0.5); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; z-index: 5; display: flex; align-items: center; justify-content: center; }
+  .nav-arrow:hover { background: rgba(20,18,15,0.75); }
+  .nav-arrow.prev { left: 12px; }
+  .nav-arrow.next { right: 12px; }
+  .viewer-media .nav-arrow { background: rgba(255,255,255,0.75); color: var(--ink); }
+  .viewer-media .nav-arrow:hover { background: #fff; }
+  .gallery-grid { display: none; max-width: 1200px; margin: 0 auto; padding: 0 6vw 8vh; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .gallery-grid.open { display: grid; }
+  .gallery-grid img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; cursor: pointer; background: var(--img-fallback); }
+  .gallery-grid img:hover { opacity: 0.85; }
   .viewer-info { width: 300px; flex-shrink: 0; padding: 8px 0 0 32px; border-left: 1px solid var(--line); }
   .viewer-info h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 26px; margin: 0 0 12px; }
   .viewer-info .caption { font-size: 14px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 22px; }
@@ -160,8 +170,12 @@
 @if ($album->media->isEmpty())
   <p style="text-align:center;color:var(--ink-soft);padding:0 6vw 8vh;">Cet album ne contient pas encore d'œuvres.</p>
 @else
-  <div class="viewer">
+  <div class="viewer" id="single-view">
     <div class="viewer-media">
+      @if ($album->media->count() > 1)
+        <button type="button" class="nav-arrow prev" id="viewer-prev" aria-label="Photo précédente">‹</button>
+        <button type="button" class="nav-arrow next" id="viewer-next" aria-label="Photo suivante">›</button>
+      @endif
       <img id="v-img" src="" alt="">
     </div>
     <div class="viewer-info">
@@ -173,13 +187,19 @@
     </div>
   </div>
 
+  <div class="gallery-grid" id="gallery-grid"></div>
+
   <div class="full-view" id="full-view">
     <button class="full-view-close" id="full-view-close" aria-label="Fermer">Fermer ✕</button>
+    @if ($album->media->count() > 1)
+      <button type="button" class="nav-arrow prev" id="full-view-prev" aria-label="Photo précédente">‹</button>
+      <button type="button" class="nav-arrow next" id="full-view-next" aria-label="Photo suivante">›</button>
+    @endif
     <img id="full-view-img" src="" alt="">
     <p class="full-view-caption" id="full-view-caption"></p>
   </div>
 
-  <div class="carousel-wrap">
+  <div class="carousel-wrap" id="carousel-wrap">
     <button class="carousel-arrow" id="carousel-prev" aria-label="Photos précédentes">‹</button>
     <div class="carousel" id="carousel"></div>
     <button class="carousel-arrow" id="carousel-next" aria-label="Photos suivantes">›</button>
@@ -304,7 +324,7 @@
   });
   const thumbs = Array.from(carousel.children);
 
-  function select(index) {
+  function select(index, scrollThumbIntoView = true) {
     currentIndex = index;
     const img = images[index];
 
@@ -351,7 +371,13 @@
 
     thumbs.forEach((t, i) => t.classList.toggle('active', i === index));
     const activeThumb = thumbs[index];
-    if (activeThumb) activeThumb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    // scrollIntoView (même avec block:"nearest") peut quand même faire
+    // défiler la page verticalement pour amener le strip de vignettes à
+    // l'écran — indésirable en plein milieu d'un swipe ou d'un clic sur les
+    // flèches, où l'utilisateur doit rester devant la photo. Désactivable
+    // via le second paramètre, actif seulement pour un clic direct sur une
+    // vignette du strip.
+    if (scrollThumbIntoView && activeThumb) activeThumb.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 
     carouselPosition.textContent = `${index + 1} / ${images.length}`;
 
@@ -385,19 +411,43 @@
   fullViewClose.addEventListener('click', closeFullView);
   fullView.addEventListener('click', (e) => { if (e.target === fullView) closeFullView(); });
 
-  // Ouvre la visionneuse plein écran à l'image actuellement affichée, sans
-  // lancer le défilement automatique — navigation manuelle (clic/tactile/
-  // flèches) plutôt qu'un diaporama.
+  // "Vue galerie" : affiche toutes les photos de l'album en tuiles, à la
+  // place du viewer une-photo-à-la-fois — cliquer sur une tuile ouvre la
+  // visionneuse plein écran sur cette photo précise.
+  const singleView = document.getElementById('single-view');
+  const carouselWrap = document.getElementById('carousel-wrap');
+  const galleryGrid = document.getElementById('gallery-grid');
+
+  if (galleryGrid) {
+    images.forEach((img, i) => {
+      const tile = document.createElement('img');
+      tile.src = img.dataset.thumb || img.src;
+      tile.loading = 'lazy';
+      tile.alt = img.dataset.title || '';
+      tile.onerror = function () { if (this.src !== img.src) this.src = img.src; };
+      tile.addEventListener('click', () => {
+        fullView.classList.add('open');
+        select(i, false);
+      });
+      galleryGrid.appendChild(tile);
+    });
+  }
+
   if (galleryViewBtn) {
     galleryViewBtn.addEventListener('click', () => {
-      fullView.classList.add('open');
-      select(currentIndex);
+      const isGalleryOpen = galleryGrid.classList.toggle('open');
+      singleView.style.display = isGalleryOpen ? 'none' : '';
+      carouselWrap.style.display = isGalleryOpen ? 'none' : '';
+      carouselPosition.style.display = isGalleryOpen ? 'none' : '';
+      galleryViewBtn.textContent = isGalleryOpen ? 'Vue simple' : 'Vue galerie';
     });
   }
 
   // Glisser à gauche/droite pour changer d'image sur mobile, sans avoir à
   // descendre jusqu'au strip de vignettes — sur le viewer principal de la
-  // page ET dans la visionneuse plein écran (vue galerie/diaporama).
+  // page ET dans la visionneuse plein écran (vue galerie/diaporama). Ne
+  // fait jamais défiler la page : l'utilisateur doit rester devant la
+  // photo (voir select(index, false) plus haut).
   function enableSwipeNav(zone) {
     const MIN_SWIPE_PX = 60;
     let startX = null;
@@ -416,14 +466,24 @@
 
       if (Math.abs(dx) < MIN_SWIPE_PX || Math.abs(dx) < Math.abs(dy)) return;
 
-      if (dx < 0) select((currentIndex + 1) % images.length);
-      else select((currentIndex - 1 + images.length) % images.length);
+      if (dx < 0) select((currentIndex + 1) % images.length, false);
+      else select((currentIndex - 1 + images.length) % images.length, false);
     }, { passive: true });
   }
 
   enableSwipeNav(fullView);
   const viewerMedia = document.querySelector('.viewer-media');
   if (viewerMedia) enableSwipeNav(viewerMedia);
+
+  // Flèches cliquables — disponibles sur tous les appareils (souris comme
+  // tactile), pas seulement le clavier ou le swipe.
+  function goTo(delta) {
+    select((currentIndex + delta + images.length) % images.length, false);
+  }
+  document.getElementById('viewer-prev')?.addEventListener('click', () => goTo(-1));
+  document.getElementById('viewer-next')?.addEventListener('click', () => goTo(1));
+  document.getElementById('full-view-prev')?.addEventListener('click', () => goTo(-1));
+  document.getElementById('full-view-next')?.addEventListener('click', () => goTo(1));
 
   document.addEventListener('keydown', (e) => {
     const tag = document.activeElement && document.activeElement.tagName;

@@ -124,6 +124,9 @@
                         <button type="submit" class="pill" style="border-color:var(--danger);color:var(--danger);cursor:pointer;background:none;font-family:inherit;">↻ Vignette manquante</button>
                       </form>
                     @endif
+                    @if (\App\Support\Plugins::enabled('photoedit') && ! $item->isVideo())
+                      <a href="{{ route('admin.media.edit-image', $item) }}" class="pill" style="margin-left:6px;text-decoration:none;">Éditer l'image</a>
+                    @endif
                   </td>
                   <td>{{ number_format($item->filesize / 1048576, 1) }} Mo</td>
                   <td>{{ $item->created_at->diffForHumans() }}</td>
@@ -149,6 +152,12 @@
               @endif
               @if ($item->status === 'draft')
                 <span class="cover-badge" style="display:block;background:var(--warn);">Brouillon</span>
+              @endif
+              @if (\App\Support\Plugins::enabled('photoedit') && ! $item->isVideo())
+                <a href="{{ route('admin.media.edit-image', $item) }}" aria-label="Éditer l'image" title="Éditer l'image"
+                   style="position:absolute;top:6px;right:6px;z-index:2;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" stroke="#1E1C19" fill="none" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"></path></svg>
+                </a>
               @endif
               @if (! $item->isVideo() && $item->variants->count() < 3 && $item->created_at < $stuckBefore)
                 <form method="POST" action="{{ route('admin.media.retry', $item) }}" style="position:absolute;bottom:6px;left:6px;right:6px;z-index:2;" onclick="event.stopPropagation();">
