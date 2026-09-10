@@ -89,6 +89,12 @@
       <a href="{{ route('admin.updates.index') }}" class="{{ $active === 'updates' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3.5-7.14"></path><path d="M21 3v6h-6"></path></svg>
         Mises à jour
+        @if (app(\App\Services\UpdateService::class)->checkForUpdate()['updateAvailable'])
+          <span class="badge badge-warning update-available-badge">
+            <span class="update-available-full">Disponible</span>
+            <span class="update-available-compact">1</span>
+          </span>
+        @endif
       </a>
       @if (\App\Support\Plugins::enabled('likes'))
         <a href="{{ route('admin.likes.index') }}" class="{{ $active === 'likes' ? 'active' : '' }}">

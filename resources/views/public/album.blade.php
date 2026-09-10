@@ -201,6 +201,8 @@
         data-location="{{ $item->displayLocation() }}"
         data-location-map="{{ $item->mapUrl() }}"
         data-video="{{ $item->isVideo() ? '1' : '0' }}"
+        data-thumb="{{ $item->isVideo() ? '' : ($item->variant('thumbnail')?->url() ?? $item->sourceUrl()) }}"
+        loading="lazy"
         src="{{ $item->isVideo() ? 'data:image/svg+xml;utf8,'.rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5C574E" stroke-width="1.2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>') : $item->sourceUrl() }}"
         alt="{{ $item->alt_text }}">
     @endforeach
@@ -289,8 +291,14 @@
 
   images.forEach((img, i) => {
     const thumb = document.createElement('img');
-    thumb.src = img.src;
+    // Vignette dédiée (petite, rapide) plutôt que la variante "web" utilisée
+    // par la visionneuse principale — évite de charger deux fois une image
+    // en pleine taille par photo, ce qui pouvait saturer les connexions du
+    // navigateur sur un gros album et faire échouer certaines vignettes.
+    thumb.src = img.dataset.thumb || img.src;
+    thumb.loading = 'lazy';
     thumb.alt = '';
+    thumb.onerror = function () { if (this.src !== img.src) this.src = img.src; };
     thumb.addEventListener('click', () => { stopSlideshow(); select(i); });
     carousel.appendChild(thumb);
   });
@@ -387,19 +395,20 @@
     });
   }
 
-  // Glisser à gauche/droite dans la visionneuse plein écran pour changer
-  // d'image sur mobile, sans avoir à descendre jusqu'au strip de vignettes.
-  (function () {
+  // Glisser à gauche/droite pour changer d'image sur mobile, sans avoir à
+  // descendre jusqu'au strip de vignettes — sur le viewer principal de la
+  // page ET dans la visionneuse plein écran (vue galerie/diaporama).
+  function enableSwipeNav(zone) {
     const MIN_SWIPE_PX = 60;
     let startX = null;
     let startY = null;
 
-    fullView.addEventListener('touchstart', (e) => {
+    zone.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     }, { passive: true });
 
-    fullView.addEventListener('touchend', (e) => {
+    zone.addEventListener('touchend', (e) => {
       if (startX === null) return;
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
@@ -410,7 +419,11 @@
       if (dx < 0) select((currentIndex + 1) % images.length);
       else select((currentIndex - 1 + images.length) % images.length);
     }, { passive: true });
-  })();
+  }
+
+  enableSwipeNav(fullView);
+  const viewerMedia = document.querySelector('.viewer-media');
+  if (viewerMedia) enableSwipeNav(viewerMedia);
 
   document.addEventListener('keydown', (e) => {
     const tag = document.activeElement && document.activeElement.tagName;

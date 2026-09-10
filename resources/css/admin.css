@@ -866,6 +866,9 @@ tr.has-broken-thumb .thumb-reload-inline { display: inline; }
 .mobile-nav-toggle { display: none; }
 .sidebar-backdrop { display: none; }
 
+.update-available-badge { margin-left: auto; }
+.update-available-compact { display: none; }
+
 @media (max-width: 900px) {
   .mobile-nav-toggle {
     display: flex;
@@ -892,6 +895,9 @@ tr.has-broken-thumb .thumb-reload-inline { display: inline; }
     background: rgba(20, 18, 15, 0.45);
     z-index: 140;
   }
+
+  .update-available-full { display: none; }
+  .update-available-compact { display: inline; }
 
   .sidebar {
     display: flex;
