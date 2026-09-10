@@ -360,6 +360,23 @@
 
   let thumbs = [];
 
+  // Icône neutre affichée quand ni la vignette ni la variante "web" ne se
+  // chargent (fichier réellement manquant/corrompu côté serveur) — évite
+  // l'icône de rupture native du navigateur (le "point d'interrogation").
+  const BROKEN_THUMB_SRC = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+    + '<rect width="100" height="100" fill="#e8e8e8"/>'
+    + '<path d="M28 66l16-20 11 13 9-11 16 18H28z" fill="#bcbcbc"/>'
+    + '<circle cx="37" cy="36" r="7" fill="#bcbcbc"/>'
+    + '</svg>'
+  );
+
+  function onThumbError() {
+    if (this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; return; }
+    this.onerror = null;
+    this.src = BROKEN_THUMB_SRC;
+  }
+
   function buildCarousel() {
     carousel.innerHTML = '';
     images.forEach((img, i) => {
@@ -370,9 +387,10 @@
       // connexions du navigateur sur un gros album et faire échouer
       // certaines vignettes.
       thumb.src = img.dataset.thumb || img.src;
+      thumb.dataset.fallbackSrc = img.src;
       thumb.loading = 'lazy';
       thumb.alt = '';
-      thumb.onerror = function () { if (this.src !== img.src) this.src = img.src; };
+      thumb.onerror = onThumbError;
       thumb.addEventListener('click', () => { stopSlideshow(); select(i); });
       carousel.appendChild(thumb);
     });
@@ -481,9 +499,10 @@
     images.forEach((img, i) => {
       const tile = document.createElement('img');
       tile.src = img.dataset.thumb || img.src;
+      tile.dataset.fallbackSrc = img.src;
       tile.loading = 'lazy';
       tile.alt = img.dataset.title || '';
-      tile.onerror = function () { if (this.src !== img.src) this.src = img.src; };
+      tile.onerror = onThumbError;
       tile.addEventListener('click', () => {
         fullView.classList.add('open');
         select(i, false);
