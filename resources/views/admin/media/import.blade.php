@@ -18,38 +18,27 @@
     </div>
   </div>
 
-  @if ($importOneByOne)
-    <div class="alert alert-info alert-block" style="margin-top:16px;">
-      <div>
-        <strong>Import de masse désactivé.</strong>
-        <div style="margin-top:4px;">
-          Le réglage « Import une photo par une photo » est actif (Réglages → Médiathèque) : l'import depuis un dossier serveur, qui traite de nombreux fichiers d'un coup, est désactivé tant que ce mode est en place. Désactive-le dans les réglages pour reprendre l'import de masse.
-        </div>
-      </div>
-    </div>
-  @else
-    <div class="panel">
-      <h2 style="margin:0 0 10px;">Import depuis un dossier serveur (gros transferts)</h2>
-      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;">
-        Pour des centaines de photos d'un coup, dépose-les par FTP/SFTP directement dans ce dossier sur le serveur au lieu de passer par l'envoi navigateur :
-      </p>
-      <code style="display:block;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;margin-bottom:14px;word-break:break-all;">{{ $importFolderPath }}</code>
+  <div class="panel">
+    <h2 style="margin:0 0 10px;">Import depuis un dossier serveur (gros transferts)</h2>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;">
+      Pour des centaines de photos d'un coup, dépose-les par FTP/SFTP directement dans ce dossier sur le serveur au lieu de passer par l'envoi navigateur. Les fichiers sont déjà sur le serveur, mais leur traitement (vignettes) se fait quand même une photo à la fois, jamais plusieurs en simultané :
+    </p>
+    <code style="display:block;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;margin-bottom:14px;word-break:break-all;">{{ $importFolderPath }}</code>
 
-      @if (session('status') && str_contains(session('status'), 'importée'))
-        <div class="alert alert-success" style="margin-bottom:14px;">{{ session('status') }}</div>
+    @if (session('status') && str_contains(session('status'), 'importée'))
+      <div class="alert alert-success" style="margin-bottom:14px;">{{ session('status') }}</div>
+    @endif
+
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:13px;color:var(--ink-soft);">{{ $importFolderCount }} fichier(s) en attente dans ce dossier</span>
+      @if ($importFolderCount > 0)
+        <form method="POST" action="{{ route('admin.media.import-folder') }}" id="import-folder-form">
+          @csrf
+          <button type="submit" class="btn primary" id="import-folder-btn">Importer depuis le dossier</button>
+        </form>
       @endif
-
-      <div style="display:flex;align-items:center;gap:14px;">
-        <span style="font-size:13px;color:var(--ink-soft);">{{ $importFolderCount }} fichier(s) en attente dans ce dossier</span>
-        @if ($importFolderCount > 0)
-          <form method="POST" action="{{ route('admin.media.import-folder') }}" id="import-folder-form">
-            @csrf
-            <button type="submit" class="btn primary" id="import-folder-btn">Importer depuis le dossier</button>
-          </form>
-        @endif
-      </div>
     </div>
-  @endif
+  </div>
 
   <div class="dropzone" id="dropzone">
     <svg viewBox="0 0 24 24"><path d="M12 3v14"></path><path d="M5 10l7-7 7 7"></path><path d="M5 21h14"></path></svg>
@@ -81,11 +70,12 @@
   const uploadUrl = @json(route('admin.media.store'));
   const itemStatusUrlTemplate = @json(route('admin.media.item-processing-status', ['media' => '__ID__']));
   const csrfToken = @json(csrf_token());
-  const oneByOne = @json($importOneByOne);
-  // En mode « une photo par une photo », une seule œuvre à la fois — et le
-  // slot ne se libère qu'une fois son traitement (vignettes) terminé à 100%,
-  // pas seulement son envoi (voir onSettled plus bas).
-  const concurrency = oneByOne ? 1 : @json(max(1, (int) \App\Models\Setting::get('import_concurrency', 3)));
+  // Une œuvre à la fois, toujours : le slot ne se libère qu'une fois le
+  // traitement (vignettes) de la précédente terminé à 100%, pas seulement
+  // son envoi (voir onSettled plus bas) — ce n'est plus un réglage optionnel,
+  // ça évite qu'une photo trop lourde ne bloque toute une file de plusieurs
+  // dizaines d'autres derrière elle.
+  const concurrency = 1;
 
   let total = 0;
   let done = 0;
@@ -139,8 +129,7 @@
   }
 
   // N'envoie jamais plus de `concurrency` fichiers en même temps : au-delà,
-  // le reste attend son tour dans `pending` (réglable depuis Réglages →
-  // Médiathèque, utile sur un hébergement modeste).
+  // le reste attend son tour dans `pending`.
   function fillSlots() {
     while (active < concurrency && pending.length > 0) {
       const file = pending.shift();
@@ -216,11 +205,9 @@
         } else {
           item.classList.add('done');
           statusLabel.textContent = 'Importée';
-          // En mode « une par une », le slot ne se libère qu'à la fin du
-          // traitement (voir watchItemProcessing) — sinon (mode normal),
-          // tout de suite : le traitement continue en tâche de fond.
-          watchItemProcessing(item, statusLabel, data.media.id, oneByOne ? onSettled : null);
-          if (! oneByOne) onSettled();
+          // Le slot ne se libère qu'à la fin du traitement (voir
+          // watchItemProcessing), jamais dès l'envoi seul.
+          watchItemProcessing(item, statusLabel, data.media.id, onSettled);
         }
       } else {
         item.classList.add('failed');
@@ -238,8 +225,8 @@
     });
 
     // Progression du traitement (miniatures) de cette œuvre précise, une fois
-    // importée — distincte de la barre d'envoi ci-dessus. `onDone`, si fourni,
-    // n'est appelé qu'une fois le traitement à 100% (mode une par une).
+    // importée — distincte de la barre d'envoi ci-dessus. `onDone` n'est
+    // appelé qu'une fois le traitement à 100%, jamais avant.
     function watchItemProcessing(item, statusLabel, mediaId, onDone) {
       const track = item.querySelector('.processing-track');
       const fill = item.querySelector('.processing-fill');
@@ -261,7 +248,7 @@
 
             if (data.done) {
               statusLabel.textContent = 'Traitée';
-              if (onDone) onDone();
+              onDone();
             } else {
               setTimeout(poll, 3000);
             }

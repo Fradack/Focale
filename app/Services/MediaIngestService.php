@@ -65,7 +65,12 @@ class MediaIngestService
                 true
             );
 
-            $result = $this->ingest($uploaded);
+            // Traitement synchrone (pas de mise en file) : le fichier suivant
+            // n'est ingéré qu'une fois celui-ci entièrement traité, même si
+            // les fichiers sont déjà tous présents sur le serveur — la règle
+            // "une photo à la fois" s'applique à l'analyse, pas seulement à
+            // l'envoi navigateur.
+            $result = $this->ingest($uploaded, processSynchronously: true);
             $result['duplicate'] ? $duplicates++ : $imported++;
 
             // Déplacé (pas supprimé) après import : on garde une trace de ce
@@ -83,7 +88,7 @@ class MediaIngestService
     /**
      * @return array{media: Media, duplicate: bool}
      */
-    public function ingest(UploadedFile $file): array
+    public function ingest(UploadedFile $file, bool $processSynchronously = false): array
     {
         $checksum = hash_file('sha256', $file->getRealPath());
 
@@ -144,6 +149,8 @@ class MediaIngestService
                     'filesize' => $file->getSize(),
                 ]);
             }
+        } elseif ($processSynchronously) {
+            GenerateMediaVariants::dispatchSync($media);
         } else {
             GenerateMediaVariants::dispatch($media);
         }

@@ -15,15 +15,12 @@ class SettingController extends Controller
         'site_name', 'artist_name', 'bio', 'contact_email',
         'social_instagram', 'social_twitter', 'maintenance_mode',
         'home_cover_media_id', 'turnstile_site_key', 'turnstile_secret_key',
-        'footer_copyright', 'import_concurrency', 'import_one_by_one', 'theme_admin', 'theme_public',
+        'footer_copyright', 'theme_admin', 'theme_public', 'shop_enabled',
     ];
 
     public function edit(): View
     {
         $values = collect(self::KEYS)->mapWithKeys(fn ($key) => [$key => Setting::get($key)]);
-        $values['import_concurrency'] ??= 3;
-        // Coché et recommandé par défaut : seul un réglage explicite à '0' le désactive.
-        $values['import_one_by_one'] = $values['import_one_by_one'] !== '0';
         $values['theme_admin'] = \App\Support\Theme::adminTheme();
         $values['theme_public'] = \App\Support\Theme::publicTheme();
 
@@ -47,15 +44,13 @@ class SettingController extends Controller
             'turnstile_site_key' => ['nullable', 'string', 'max:255'],
             'turnstile_secret_key' => ['nullable', 'string', 'max:255'],
             'footer_copyright' => ['nullable', 'string', 'max:255'],
-            'import_concurrency' => ['nullable', 'integer', 'min:1', 'max:10'],
-            'import_one_by_one' => ['nullable', 'boolean'],
             'theme_admin' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
             'theme_public' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
+            'shop_enabled' => ['nullable', 'boolean'],
         ]);
 
         $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
-        $data['import_concurrency'] = $data['import_concurrency'] ?? 3;
-        $data['import_one_by_one'] = $request->boolean('import_one_by_one') ? '1' : '0';
+        $data['shop_enabled'] = $request->boolean('shop_enabled') ? '1' : '0';
         $data['theme_admin'] = $data['theme_admin'] ?? 'light';
         $data['theme_public'] = $data['theme_public'] ?? 'light';
 

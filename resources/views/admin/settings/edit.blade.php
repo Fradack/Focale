@@ -94,30 +94,24 @@
       </div>
 
       <div class="panel">
-        <h2>Médiathèque</h2>
-        <div class="field" style="max-width:180px;">
-          <label>Imports simultanés</label>
-          <input type="number" name="import_concurrency" min="1" max="10" value="{{ old('import_concurrency', $values['import_concurrency']) }}">
-        </div>
-        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nombre d'œuvres envoyées en même temps lors d'un import en gros lot. Réduis cette valeur si des imports échouent sur un hébergement modeste.</p>
-
-        <div style="border-top:1px solid var(--line);margin:16px 0;"></div>
-
-        <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
-          <input type="checkbox" name="import_one_by_one" value="1" @checked($values['import_one_by_one'])>
-          Import une photo par une photo (recommandé)
-        </label>
-        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">
-          Chaque photo doit être entièrement envoyée puis traitée (100% de ses vignettes) avant que la suivante ne démarre — évite de surcharger le serveur. Désactive aussi l'import de masse depuis un dossier serveur (ci-dessous, dans la page d'import) tant que ce réglage est actif.
-        </p>
-      </div>
-
-      <div class="panel">
         <h2>Site</h2>
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
           <input type="checkbox" name="maintenance_mode" value="1" @checked($values['maintenance_mode'] === '1')>
           Activer le mode maintenance (site public masqué)
         </label>
+      </div>
+
+      <div class="panel">
+        <h2>Boutique</h2>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
+          <input type="checkbox" name="shop_enabled" value="1" @checked($values['shop_enabled'] === '1')>
+          Activer la boutique (affiche le lien « Boutique » dans la navigation et rend /boutique et /panier accessibles)
+        </label>
+        <p style="font-size:12px;color:var(--ink-soft);margin:12px 0 0;">
+          Gestion des articles, moyens de paiement, options de livraison et commandes depuis
+          <a href="{{ route('admin.shop.products.index') }}" style="text-decoration:underline;">Boutique → Produits</a>
+          dans le menu.
+        </p>
       </div>
 
       <div class="panel">

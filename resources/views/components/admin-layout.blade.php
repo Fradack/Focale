@@ -34,6 +34,26 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path></svg>
         Albums
       </a>
+      <a href="{{ route('admin.shop.products.index') }}" class="{{ $active === 'shop-products' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><path d="M6 2l1.5 5h9L18 2"></path><path d="M3.5 7h17l-1.3 13a2 2 0 01-2 1.8H6.8a2 2 0 01-2-1.8L3.5 7z"></path></svg>
+        Produits
+      </a>
+      <a href="{{ route('admin.shop.orders.index') }}" class="{{ $active === 'shop-orders' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+        Commandes
+        @php($pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count())
+        @if($pendingOrdersCount > 0)
+          <span class="count">{{ $pendingOrdersCount }}</span>
+        @endif
+      </a>
+      <a href="{{ route('admin.shop.payment-methods.index') }}" class="{{ $active === 'shop-payment' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>
+        Paiement
+      </a>
+      <a href="{{ route('admin.shop.shipping-options.index') }}" class="{{ $active === 'shop-shipping' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><rect x="1" y="7" width="14" height="10"></rect><path d="M15 10h4l4 4v3h-8z"></path><circle cx="6" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle></svg>
+        Livraison
+      </a>
       <a href="{{ route('admin.pages.index') }}" class="{{ $active === 'pages' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path></svg>
         Pages

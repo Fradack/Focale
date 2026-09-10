@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Media;
-use App\Models\Setting;
 use App\Services\MediaIngestService;
 use App\Services\MediaProcessingStatus;
 use App\Services\QueuePump;
@@ -186,20 +185,14 @@ class MediaController extends Controller
             'importFolderPath' => $importDir,
             'importFolderCount' => is_dir($importDir)
                 ? collect(File::files($importDir))
-                    ->filter(fn ($f) => in_array(strtolower($f->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true))
+                    ->filter(fn ($f) => in_array(strtolower($f->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm'], true))
                     ->count()
                 : 0,
-            'importOneByOne' => Setting::get('import_one_by_one') !== '0',
         ]);
     }
 
     public function importFromFolder(MediaIngestService $service): RedirectResponse
     {
-        if (Setting::get('import_one_by_one') !== '0') {
-            return redirect()->route('admin.media.import')
-                ->with('status', "L'import de masse est désactivé tant que le réglage « une photo par une photo » est actif (Réglages → Médiathèque).");
-        }
-
         $result = $service->ingestFromFolder();
 
         $message = "{$result['imported']} œuvre(s) importée(s)";

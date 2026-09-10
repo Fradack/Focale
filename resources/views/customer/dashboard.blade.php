@@ -33,6 +33,10 @@
   <div class="card">
     <p style="margin:0;"><strong style="color:var(--ink);">E-mail :</strong> {{ $user->email }}</p>
   </div>
+  <div class="card">
+    <p style="margin:0 0 12px;"><strong style="color:var(--ink);">Commandes</strong></p>
+    <a href="{{ route('customer.orders.index') }}" style="text-decoration:underline;">Voir mes commandes →</a>
+  </div>
   <form method="POST" action="{{ route('customer.logout') }}" style="margin-top:24px;">
     @csrf
     <button type="submit">Se déconnecter</button>

@@ -7,21 +7,29 @@ use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ShippingOptionController as AdminShippingOptionController;
 use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Customer\AccountController as CustomerAccountController;
+use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Install\InstallController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\AlbumController as PublicAlbumController;
+use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\FaqController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ImageController as PublicImageController;
 use App\Http\Controllers\Public\PageController as PublicPageController;
 use App\Http\Controllers\Public\SeoController;
+use App\Http\Controllers\Public\ShopController;
 use Illuminate\Support\Facades\Route;
 
 // Installateur — jamais accessible une fois storage/app/installed.lock présent.
@@ -63,6 +71,18 @@ Route::middleware(['maintenance', 'visit-log'])->group(function () {
     Route::post('/image/{media:slug}/vue', [PublicImageController::class, 'recordView'])
         ->middleware('throttle:30,1')
         ->name('public.image.view');
+
+    Route::middleware('shop_enabled')->group(function () {
+        Route::get('/boutique', [ShopController::class, 'index'])->name('public.shop.index');
+        Route::get('/boutique/{product:slug}', [ShopController::class, 'show'])->name('public.shop.show');
+
+        Route::get('/panier', [CartController::class, 'show'])->name('public.cart.show');
+        Route::post('/panier', [CartController::class, 'store'])->name('public.cart.add');
+        Route::patch('/panier/{variant}', [CartController::class, 'update'])->name('public.cart.update');
+        Route::delete('/panier/{variant}', [CartController::class, 'destroy'])->name('public.cart.remove');
+        Route::get('/panier/commander', [CartController::class, 'showCheckout'])->name('public.cart.checkout');
+        Route::post('/panier/commander', [CartController::class, 'placeOrder'])->name('public.cart.checkout.store');
+    });
 
     Route::get('/faq', [FaqController::class, 'index'])->name('public.faq');
 
@@ -131,6 +151,32 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
 
     Route::get('statistiques', [StatsController::class, 'index'])->name('stats.index');
 
+    Route::prefix('boutique')->name('shop.')->group(function () {
+        Route::get('produits', [AdminProductController::class, 'index'])->name('products.index');
+        Route::post('produits', [AdminProductController::class, 'store'])->name('products.store');
+        Route::get('produits/{product}', [AdminProductController::class, 'edit'])->name('products.edit');
+        Route::put('produits/{product}', [AdminProductController::class, 'update'])->name('products.update');
+        Route::delete('produits/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+
+        Route::post('produits/{product}/formats', [AdminProductVariantController::class, 'store'])->name('products.variants.store');
+        Route::put('produits/{product}/formats/{variant}', [AdminProductVariantController::class, 'update'])->name('products.variants.update');
+        Route::delete('produits/{product}/formats/{variant}', [AdminProductVariantController::class, 'destroy'])->name('products.variants.destroy');
+
+        Route::get('paiement', [AdminPaymentMethodController::class, 'index'])->name('payment-methods.index');
+        Route::post('paiement', [AdminPaymentMethodController::class, 'store'])->name('payment-methods.store');
+        Route::put('paiement/{paymentMethod}', [AdminPaymentMethodController::class, 'update'])->name('payment-methods.update');
+        Route::delete('paiement/{paymentMethod}', [AdminPaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
+        Route::get('livraison', [AdminShippingOptionController::class, 'index'])->name('shipping-options.index');
+        Route::post('livraison', [AdminShippingOptionController::class, 'store'])->name('shipping-options.store');
+        Route::put('livraison/{shippingOption}', [AdminShippingOptionController::class, 'update'])->name('shipping-options.update');
+        Route::delete('livraison/{shippingOption}', [AdminShippingOptionController::class, 'destroy'])->name('shipping-options.destroy');
+
+        Route::get('commandes', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('commandes/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::put('commandes/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
+    });
+
     Route::get('reglages', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('reglages', [SettingController::class, 'update'])->name('settings.update');
 
@@ -162,6 +208,9 @@ Route::prefix('compte')->name('customer.')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
         Route::post('deconnexion', [CustomerAccountController::class, 'logout'])->name('logout');
+
+        Route::get('commandes', [CustomerOrderController::class, 'index'])->name('orders.index');
+        Route::get('commandes/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
     });
 });
 

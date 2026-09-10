@@ -10,6 +10,10 @@
   @if (session('status') === 'update-applied')
     <div class="alert alert-success">Mise à jour appliquée avec succès.</div>
     <script>
+      // Le thème de l'admin colore aussi la petite célébration de fin de
+      // mise à jour — confettis (ou citrouilles/sapins) et carillon.
+      const celebrationTheme = @json(\App\Support\Theme::adminTheme());
+
       (function () {
         // position:absolute + hauteur totale du document (pas juste la
         // fenêtre visible) pour que les confettis retombent bien jusqu'en
@@ -21,13 +25,18 @@
         canvas.height = pageHeight;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
+
+        // Thème par défaut (clair/sombre) : confettis rectangulaires colorés.
+        // Thèmes saisonniers : emoji à la place, plus parlant que des couleurs.
+        const seasonalEmoji = { halloween: '🎃', noel: '🎄' }[celebrationTheme] || null;
         const colors = ['#7A4B33', '#4B6B4E', '#8A6A1F', '#A3402E', '#1E1C19'];
-        const pieces = Array.from({ length: 220 }, () => ({
+
+        const pieces = Array.from({ length: seasonalEmoji ? 90 : 220 }, () => ({
           x: Math.random() * canvas.width,
           y: -20 - Math.random() * canvas.height * 0.3,
-          size: 6 + Math.random() * 6,
+          size: seasonalEmoji ? (18 + Math.random() * 16) : (6 + Math.random() * 6),
           color: colors[Math.floor(Math.random() * colors.length)],
-          speedY: 3 + Math.random() * 4,
+          speedY: (seasonalEmoji ? 2 : 3) + Math.random() * 4,
           speedX: -1.5 + Math.random() * 3,
           rotation: Math.random() * 360,
           spin: -6 + Math.random() * 12,
@@ -47,8 +56,15 @@
             ctx.save();
             ctx.translate(p.x, p.y);
             ctx.rotate((p.rotation * Math.PI) / 180);
-            ctx.fillStyle = p.color;
-            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            if (seasonalEmoji) {
+              ctx.font = `${p.size}px serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(seasonalEmoji, 0, 0);
+            } else {
+              ctx.fillStyle = p.color;
+              ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            }
             ctx.restore();
           });
           if (anyOnScreen && frame < maxFrames) {
@@ -64,22 +80,41 @@
         // Petit carillon généré à la volée (Web Audio) plutôt qu'un fichier
         // audio à héberger — pas de son du tout si le navigateur bloque
         // l'audio sans interaction préalable, ce qui n'est pas bloquant ici.
+        // Une note (fréquence Hz, durée en secondes) par thème.
+        const tunes = {
+          // Do (do6) - Mi - Sol - Do : arpège majeur, clochettes de Noël.
+          noel: [
+            [1046.50, 0.22], [1318.51, 0.22], [1567.98, 0.22], [2093.00, 0.4],
+          ],
+          // Descente chromatique grinçante, timbre carré pour l'aspect "grave".
+          halloween: [
+            [440.00, 0.18], [415.30, 0.18], [369.99, 0.18], [311.13, 0.5],
+          ],
+          // Carillon de succès par défaut : deux notes ascendantes.
+          default: [
+            [880.00, 0.35], [1318.51, 0.35],
+          ],
+        };
+        const tune = tunes[celebrationTheme] || tunes.default;
+        const oscType = celebrationTheme === 'halloween' ? 'square' : 'sine';
+
         try {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           const ctx = new AudioCtx();
-          const now = ctx.currentTime;
-          [880, 1318.51].forEach((freq, i) => {
+          let cursor = ctx.currentTime;
+          tune.forEach(([freq, duration]) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            osc.type = 'sine';
+            osc.type = oscType;
             osc.frequency.value = freq;
-            const start = now + i * 0.16;
+            const start = cursor;
             gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(0.28, start + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+            gain.gain.linearRampToValueAtTime(0.24, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
             osc.connect(gain).connect(ctx.destination);
             osc.start(start);
-            osc.stop(start + 0.35);
+            osc.stop(start + duration);
+            cursor += duration * 0.7;
           });
         } catch (e) {
           // Web Audio indisponible/bloqué — la mise à jour reste bien signalée visuellement.
