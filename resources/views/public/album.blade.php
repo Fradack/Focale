@@ -157,6 +157,14 @@
   @if ($album->media->count() > 0)
     <button type="button" class="slideshow-btn" id="gallery-view-btn" style="margin-left:10px;">Vue galerie</button>
   @endif
+  @if ($album->media->count() > 1)
+    <select id="sort-select" class="slideshow-btn" style="margin-left:10px;padding:10px 16px;">
+      <option value="default">Ordre de l'album</option>
+      <option value="chrono">Du plus ancien au plus récent</option>
+      <option value="antichrono">Du plus récent au plus ancien</option>
+      <option value="random">Aléatoire</option>
+    </select>
+  @endif
 </div>
 
 @if ($processingStatus['pending'] > 0)
@@ -218,6 +226,7 @@
           data-{{ str_replace('_', '-', $key) }}="{{ $item->visibleExif()[$key] ?? '' }}"
         @endforeach
         data-date="{{ $item->taken_at?->format('d/m/Y à H:i') }}"
+        data-date-sort="{{ $item->taken_at?->timestamp ?? 0 }}"
         data-location="{{ $item->displayLocation() }}"
         data-location-map="{{ $item->mapUrl() }}"
         data-video="{{ $item->isVideo() ? '1' : '0' }}"
@@ -286,7 +295,8 @@
 
 @if ($album->media->isNotEmpty())
 <script>
-  const images = Array.from(document.querySelectorAll('#photo-data img'));
+  let images = Array.from(document.querySelectorAll('#photo-data img'));
+  const originalOrder = images.slice();
   const vImg = document.getElementById('v-img');
   const vTitle = document.getElementById('v-title');
   const vCaption = document.getElementById('v-caption');
@@ -309,20 +319,28 @@
 
   let currentIndex = 0;
 
-  images.forEach((img, i) => {
-    const thumb = document.createElement('img');
-    // Vignette dédiée (petite, rapide) plutôt que la variante "web" utilisée
-    // par la visionneuse principale — évite de charger deux fois une image
-    // en pleine taille par photo, ce qui pouvait saturer les connexions du
-    // navigateur sur un gros album et faire échouer certaines vignettes.
-    thumb.src = img.dataset.thumb || img.src;
-    thumb.loading = 'lazy';
-    thumb.alt = '';
-    thumb.onerror = function () { if (this.src !== img.src) this.src = img.src; };
-    thumb.addEventListener('click', () => { stopSlideshow(); select(i); });
-    carousel.appendChild(thumb);
-  });
-  const thumbs = Array.from(carousel.children);
+  let thumbs = [];
+
+  function buildCarousel() {
+    carousel.innerHTML = '';
+    images.forEach((img, i) => {
+      const thumb = document.createElement('img');
+      // Vignette dédiée (petite, rapide) plutôt que la variante "web"
+      // utilisée par la visionneuse principale — évite de charger deux fois
+      // une image en pleine taille par photo, ce qui pouvait saturer les
+      // connexions du navigateur sur un gros album et faire échouer
+      // certaines vignettes.
+      thumb.src = img.dataset.thumb || img.src;
+      thumb.loading = 'lazy';
+      thumb.alt = '';
+      thumb.onerror = function () { if (this.src !== img.src) this.src = img.src; };
+      thumb.addEventListener('click', () => { stopSlideshow(); select(i); });
+      carousel.appendChild(thumb);
+    });
+    thumbs = Array.from(carousel.children);
+  }
+
+  buildCarousel();
 
   function select(index, scrollThumbIntoView = true) {
     currentIndex = index;
@@ -418,7 +436,9 @@
   const carouselWrap = document.getElementById('carousel-wrap');
   const galleryGrid = document.getElementById('gallery-grid');
 
-  if (galleryGrid) {
+  function buildGalleryGrid() {
+    if (!galleryGrid) return;
+    galleryGrid.innerHTML = '';
     images.forEach((img, i) => {
       const tile = document.createElement('img');
       tile.src = img.dataset.thumb || img.src;
@@ -430,6 +450,36 @@
         select(i, false);
       });
       galleryGrid.appendChild(tile);
+    });
+  }
+
+  buildGalleryGrid();
+
+  // Tri choisi par le visiteur — indépendant de l'ordre défini par
+  // l'administrateur (sort_order), purement côté client puisque toutes les
+  // photos sont déjà chargées dans la page.
+  const sortSelect = document.getElementById('sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      const mode = sortSelect.value;
+
+      if (mode === 'chrono') {
+        images = originalOrder.slice().sort((a, b) => Number(a.dataset.dateSort) - Number(b.dataset.dateSort));
+      } else if (mode === 'antichrono') {
+        images = originalOrder.slice().sort((a, b) => Number(b.dataset.dateSort) - Number(a.dataset.dateSort));
+      } else if (mode === 'random') {
+        images = originalOrder.slice();
+        for (let i = images.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [images[i], images[j]] = [images[j], images[i]];
+        }
+      } else {
+        images = originalOrder.slice();
+      }
+
+      buildCarousel();
+      buildGalleryGrid();
+      select(0, false);
     });
   }
 
