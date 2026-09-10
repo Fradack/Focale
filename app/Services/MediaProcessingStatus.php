@@ -17,6 +17,18 @@ class MediaProcessingStatus
     private const RATE_WINDOW_MINUTES = 10;
 
     /**
+     * En dessous de ce nombre d'œuvres terminées dans la fenêtre observée,
+     * le débit est trop bruité pour être extrapolé de façon fiable — 1 ou 2
+     * achèvements espacés (le temps d'attente entre deux chargements de page
+     * admin compte dans l'écart, pas seulement le vrai temps de traitement)
+     * peuvent donner un débit artificiellement lent et donc un ETA absurde
+     * pour un tout petit nombre d'œuvres restantes (ex. "~5 min" pour 1 seule
+     * photo). Mieux vaut élargir la fenêtre, ou renoncer à l'estimation,
+     * plutôt qu'afficher un chiffre précis mais faux.
+     */
+    private const MIN_SAMPLE_SIZE = 3;
+
+    /**
      * @return array{total: int, processed: int, pending: int, percent: int, eta_minutes: ?int}
      */
     public static function global(): array
@@ -61,8 +73,9 @@ class MediaProcessingStatus
      * cette fenêtre précise (traitement lent, ou juste malchance sur le
      * moment du sondage), on élargit progressivement plutôt que d'afficher
      * indéfiniment « estimation en cours » alors que ça avance bel et bien,
-     * juste plus lentement. Retourne null seulement si rien n'a été traité
-     * du tout sur les dernières 24h (traitement réellement à l'arrêt).
+     * juste plus lentement. Retourne null si moins de MIN_SAMPLE_SIZE œuvres
+     * ont été traitées même sur 24h — pas assez de données pour extrapoler
+     * sans produire un chiffre trompeur.
      */
     private static function estimateEtaMinutes(int $pending): ?int
     {
@@ -87,6 +100,6 @@ class MediaProcessingStatus
             ->get()
             ->count();
 
-        return $completed > 0 ? $completed / $windowMinutes : null;
+        return $completed >= self::MIN_SAMPLE_SIZE ? $completed / $windowMinutes : null;
     }
 }

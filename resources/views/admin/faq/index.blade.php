@@ -15,36 +15,19 @@
     <div class="alert alert-success">Question supprimée.</div>
   @endif
 
-  <p style="font-size:13px;color:var(--ink-soft);margin:-12px 0 20px;">
-    Affichée sur <a href="{{ route('public.faq') }}" target="_blank" style="text-decoration:underline;">la page FAQ publique ↗</a>, groupée par catégorie.
-  </p>
-
-  @if ($items->isEmpty())
+  <h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:18px;margin:0 0 4px;">FAQ Visiteurs</h2>
+  <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Affichée sur <a href="{{ route('public.faq') }}" target="_blank" style="text-decoration:underline;">la page FAQ publique ↗</a>.</p>
+  @if ($visitorItems->isEmpty())
     <div class="panel"><p style="margin:0;color:var(--ink-soft);font-size:14px;">Aucune question pour l'instant.</p></div>
   @else
-    @foreach ($items as $category => $categoryItems)
-      <div class="panel">
-        <h2>{{ $category }}</h2>
-        <div class="table-panel" style="border:none;">
-          <table>
-            <tbody>
-              @foreach ($categoryItems as $item)
-                <tr>
-                  <td>{{ $item->question }}</td>
-                  <td style="width:1%;white-space:nowrap;display:flex;gap:14px;align-items:center;">
-                    <a href="{{ route('admin.faq.edit', $item) }}" style="font-size:13px;color:var(--ink-soft);">Modifier</a>
-                    <form method="POST" action="{{ route('admin.faq.destroy', $item) }}" data-confirm="Supprimer définitivement cette question ?">
-                      @csrf
-                      @method('delete')
-                      <button type="submit" style="background:none;border:none;padding:0;font-size:13px;color:var(--danger);cursor:pointer;font-family:inherit;">Supprimer</button>
-                    </form>
-                  </td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
-      </div>
-    @endforeach
+    @include('admin.faq._groups', ['groups' => $visitorItems])
+  @endif
+
+  <h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:18px;margin:32px 0 4px;">FAQ Administrateur</h2>
+  <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Réservée à l'équipe, consultable en lecture dans <a href="{{ route('admin.help.index') }}" style="text-decoration:underline;">Aide</a> — jamais visible des visiteurs.</p>
+  @if ($adminItems->isEmpty())
+    <div class="panel"><p style="margin:0;color:var(--ink-soft);font-size:14px;">Aucune question pour l'instant.</p></div>
+  @else
+    @include('admin.faq._groups', ['groups' => $adminItems])
   @endif
 </x-admin-layout>

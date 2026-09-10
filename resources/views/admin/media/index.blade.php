@@ -37,6 +37,9 @@
     @if ($counts['processing'] > 0)
       <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'processing']) }}" class="filter-chip {{ request('status') === 'processing' ? 'active' : '' }}">En traitement ({{ $counts['processing'] }})</a>
     @endif
+    @if ($counts['videos'] > 0)
+      <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'videos']) }}" class="filter-chip {{ request('status') === 'videos' ? 'active' : '' }}">Vidéos ({{ $counts['videos'] }})</a>
+    @endif
 
     <select name="per_page" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;color:var(--ink);">
       @foreach ($perPageOptions as $option)
@@ -93,7 +96,11 @@
                   <td style="width:30px;"><input type="checkbox" class="select-item" name="ids[]" value="{{ $item->id }}"></td>
                   <td>
                     <a href="{{ route('admin.media.edit', $item) }}" class="row-cell" style="text-decoration:none;color:inherit;">
-                      @if ($thumb = $item->variant('thumbnail'))
+                      @if ($item->isVideo())
+                        <div style="width:48px;height:48px;border-radius:6px;background:var(--img-fallback);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
+                        </div>
+                      @elseif ($thumb = $item->variant('thumbnail'))
                         <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}">
                       @else
                         <div style="width:48px;height:48px;border-radius:6px;background:var(--img-fallback);flex-shrink:0;"></div>
@@ -117,7 +124,11 @@
           @foreach ($media as $item)
             <label class="media-item media-item-selectable">
               <input type="checkbox" class="select-item media-item-checkbox" name="ids[]" value="{{ $item->id }}">
-              @if ($thumb = $item->variant('thumbnail'))
+              @if ($item->isVideo())
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--img-fallback);">
+                  <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" fill="none" stroke-width="1.4" style="color:var(--ink-soft);"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
+                </div>
+              @elseif ($thumb = $item->variant('thumbnail'))
                 <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}">
               @else
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--ink-soft);">Traitement…</div>

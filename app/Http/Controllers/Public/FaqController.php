@@ -10,6 +10,6 @@ class FaqController extends Controller
 {
     public function index(): View
     {
-        return view('public.faq', ['sections' => FaqItem::ordered()->get()->groupBy('category')]);
+        return view('public.faq', ['sections' => FaqItem::visitor()->ordered()->get()->groupBy('category')]);
     }
 }

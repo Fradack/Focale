@@ -9,6 +9,14 @@
     @csrf
     <div class="panel">
       <div class="field">
+        <label>Public visé</label>
+        <select name="audience">
+          <option value="visitor" @selected(old('audience', 'visitor') === 'visitor')>Visiteurs (FAQ publique)</option>
+          <option value="admin" @selected(old('audience') === 'admin')>Administrateur (aide interne, jamais publique)</option>
+        </select>
+        @error('audience') <p class="error">{{ $message }}</p> @enderror
+      </div>
+      <div class="field">
         <label>Catégorie</label>
         <input type="text" name="category" value="{{ old('category') }}" placeholder="Ex. Parcourir le site" list="faq-categories">
         <datalist id="faq-categories">

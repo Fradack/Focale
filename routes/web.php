@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AlbumController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
+use App\Http\Controllers\Admin\HelpController;
+use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SettingController;
@@ -99,11 +101,15 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::put('albums/{album}/medias/ordre', [AlbumController::class, 'reorderMedia'])->name('albums.media.reorder');
     Route::put('albums/{album}/couverture', [AlbumController::class, 'setCover'])->name('albums.cover');
 
+    Route::get('documents-legaux', [LegalDocumentController::class, 'index'])->name('legal.index');
+
     Route::get('pages', [AdminPageController::class, 'index'])->name('pages.index');
     Route::post('pages', [AdminPageController::class, 'store'])->name('pages.store');
     Route::get('pages/{page}', [AdminPageController::class, 'edit'])->name('pages.edit');
     Route::put('pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
     Route::delete('pages/{page}', [AdminPageController::class, 'destroy'])->name('pages.destroy');
+
+    Route::get('aide', [HelpController::class, 'index'])->name('help.index');
 
     Route::get('faq', [AdminFaqController::class, 'index'])->name('faq.index');
     Route::get('faq/nouveau', [AdminFaqController::class, 'create'])->name('faq.create');

@@ -24,7 +24,11 @@ class GenerateMediaVariants implements ShouldQueue
      * plus coûteux des deux, au lieu de trois).
      */
     private const SIZES = [
-        'retina' => 2400,
+        // 2400 -> 1920 : toujours net sur les plus grands écrans actuels,
+        // mais nettement moins de pixels à encoder en WebP sur un original
+        // haute résolution — c'est le variant le plus coûteux des trois,
+        // celui qui pèse le plus sur le temps de traitement par photo.
+        'retina' => 1920,
         'web' => 1600,
         'thumbnail' => 400,
     ];
@@ -43,7 +47,10 @@ class GenerateMediaVariants implements ShouldQueue
                 $image->scaleDown(width: $maxWidth);
             }
 
-            $encoded = $image->encode(new WebpEncoder(quality: 82));
+            // 82 -> 78 : différence visuelle négligeable, mais l'encodeur WebP
+            // fait moins de recherche de compression à ce niveau de qualité,
+            // ce qui réduit un peu le temps d'encodage par photo.
+            $encoded = $image->encode(new WebpEncoder(quality: 78));
             $path = "media/{$this->media->uuid}/{$type}.webp";
 
             Storage::disk('public')->put($path, $encoded->toString());

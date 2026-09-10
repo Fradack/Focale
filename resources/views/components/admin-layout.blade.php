@@ -38,9 +38,17 @@
         <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path></svg>
         Pages
       </a>
+      <a href="{{ route('admin.legal.index') }}" class="{{ $active === 'legal' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20"></path><path d="M5 7h14"></path><path d="M7 7l-4 8a4 4 0 008 0z"></path><path d="M17 7l-4 8a4 4 0 008 0z"></path></svg>
+        Documents légaux
+      </a>
       <a href="{{ route('admin.faq.index') }}" class="{{ $active === 'faq' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
         FAQ
+      </a>
+      <a href="{{ route('admin.help.index') }}" class="{{ $active === 'help' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+        Aide
       </a>
       <a href="{{ route('admin.users.index') }}" class="{{ $active === 'users' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>

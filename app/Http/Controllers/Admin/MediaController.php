@@ -41,6 +41,8 @@ class MediaController extends Controller
         if ($status = $request->query('status')) {
             if ($status === 'processing') {
                 $query->has('variants', '<', 3);
+            } elseif ($status === 'videos') {
+                $query->where('mime_type', 'like', 'video/%');
             } else {
                 $query->where('status', $status);
             }
@@ -65,6 +67,7 @@ class MediaController extends Controller
                 'published' => Media::whereNull('trashed_at')->where('status', 'published')->count(),
                 'trashed' => Media::whereNotNull('trashed_at')->count(),
                 'processing' => Media::whereNull('trashed_at')->has('variants', '<', 3)->count(),
+                'videos' => Media::whereNull('trashed_at')->where('mime_type', 'like', 'video/%')->count(),
                 'stuck' => $this->stuckQuery()->count(),
             ],
         ]);

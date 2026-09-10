@@ -12,7 +12,10 @@ class FaqController extends Controller
 {
     public function index(): View
     {
-        return view('admin.faq.index', ['items' => FaqItem::ordered()->get()->groupBy('category')]);
+        return view('admin.faq.index', [
+            'visitorItems' => FaqItem::visitor()->ordered()->get()->groupBy('category'),
+            'adminItems' => FaqItem::admin()->ordered()->get()->groupBy('category'),
+        ]);
     }
 
     public function create(): View
@@ -26,6 +29,7 @@ class FaqController extends Controller
     {
         $data = $request->validate([
             'category' => ['required', 'string', 'max:255'],
+            'audience' => ['required', 'in:visitor,admin'],
             'question' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],
@@ -47,6 +51,7 @@ class FaqController extends Controller
     {
         $data = $request->validate([
             'category' => ['required', 'string', 'max:255'],
+            'audience' => ['required', 'in:visitor,admin'],
             'question' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],

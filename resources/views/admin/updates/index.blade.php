@@ -59,6 +59,32 @@
         }
         tick();
       })();
+
+      (function () {
+        // Petit carillon généré à la volée (Web Audio) plutôt qu'un fichier
+        // audio à héberger — pas de son du tout si le navigateur bloque
+        // l'audio sans interaction préalable, ce qui n'est pas bloquant ici.
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          const ctx = new AudioCtx();
+          const now = ctx.currentTime;
+          [880, 1318.51].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const start = now + i * 0.16;
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.28, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.35);
+          });
+        } catch (e) {
+          // Web Audio indisponible/bloqué — la mise à jour reste bien signalée visuellement.
+        }
+      })();
     </script>
   @endif
 
