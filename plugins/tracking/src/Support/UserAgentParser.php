@@ -18,4 +18,31 @@ class UserAgentParser
 
         return 'desktop';
     }
+
+    public static function os(?string $userAgent): string
+    {
+        $ua = strtolower($userAgent ?? '');
+
+        if (preg_match('/iphone|ipad|ipod/', $ua)) {
+            return 'iOS';
+        }
+
+        if (preg_match('/android/', $ua)) {
+            return 'Android';
+        }
+
+        if (preg_match('/windows/', $ua)) {
+            return 'Windows';
+        }
+
+        if (preg_match('/mac os x|macintosh/', $ua)) {
+            return 'macOS';
+        }
+
+        if (preg_match('/linux/', $ua)) {
+            return 'Linux';
+        }
+
+        return 'Autre';
+    }
 }

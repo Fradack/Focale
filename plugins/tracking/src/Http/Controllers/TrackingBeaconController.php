@@ -31,7 +31,9 @@ class TrackingBeaconController extends Controller
             'ip' => $ip,
             'commune' => $location['commune'] ?? null,
             'country' => $location['country'] ?? null,
+            'country_code' => $location['country_code'] ?? null,
             'device_type' => UserAgentParser::deviceType($request->userAgent()),
+            'os' => UserAgentParser::os($request->userAgent()),
             'duration_seconds' => (int) $request->input('duration', 0),
         ]);
 

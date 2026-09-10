@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\Http;
 class IpGeolocator
 {
     /**
-     * @return array{commune: ?string, country: ?string}|null
+     * @return array{commune: ?string, country: ?string, country_code: ?string}|null
      */
     public function locate(string $ip): ?array
     {
         try {
             $response = Http::timeout(3)
                 ->withHeaders(['User-Agent' => 'Focale-CMS-Photo (plugin tracking)'])
-                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,city,country']);
+                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,city,country,countryCode']);
 
             if (! $response->successful() || $response->json('status') !== 'success') {
                 return null;
@@ -30,6 +30,7 @@ class IpGeolocator
             return [
                 'commune' => $response->json('city'),
                 'country' => $response->json('country'),
+                'country_code' => $response->json('countryCode'),
             ];
         } catch (\Throwable) {
             return null;
