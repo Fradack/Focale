@@ -72,6 +72,19 @@ class UpdateService
 
     public function applyUpdate(): void
     {
+        // Un simple rafraîchissement/fermeture d'onglet côté navigateur ne
+        // doit jamais pouvoir interrompre l'échange de dossiers ci-dessous en
+        // plein milieu — ça laisserait l'application dans un état à moitié
+        // mis à jour, bien plus cassé qu'un message d'erreur. ignore_user_abort
+        // fait continuer le script même si le client se déconnecte ;
+        // set_time_limit(0) évite qu'une limite d'exécution par défaut trop
+        // courte (fréquente en hébergement mutualisé) ne coupe le script au
+        // même endroit pour une autre raison.
+        ignore_user_abort(true);
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
+
         // Toujours revérifier plutôt que réutiliser le cache de 6h : appliquer
         // une mise à jour est une action rare et déclenchée volontairement,
         // elle ne doit jamais retélécharger une release déjà périmée.
