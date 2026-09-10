@@ -238,6 +238,45 @@
   </div>
 @endif
 
+@if (\App\Support\Plugins::enabled('livre-dor') && $album->guestbook_enabled)
+<section class="comments">
+  <h2>Livre d'or ({{ $album->approvedGuestbookEntries->count() }})</h2>
+
+  <div class="comments-grid">
+    <div class="comments-form-col">
+      <form class="comment-form" method="POST" action="{{ route('public.guestbook.store', $album) }}">
+        @csrf
+        @if (session('status') === 'guestbook-submitted')
+          <p class="comment-notice">Merci ! Votre message sera visible après validation.</p>
+        @endif
+        @error('author_name') <p class="comment-error">{{ $message }}</p> @enderror
+        @error('message') <p class="comment-error">{{ $message }}</p> @enderror
+        @if (auth()->check() && auth()->user()->is_customer)
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;">Vous signez en tant que <strong style="color:var(--ink);">{{ auth()->user()->name }}</strong>.</p>
+        @else
+          <input type="text" name="author_name" placeholder="Votre nom" autocomplete="name" value="{{ old('author_name') }}">
+        @endif
+        <textarea name="message" placeholder="Votre message">{{ old('message') }}</textarea>
+        <input type="hidden" name="form_started_at" value="{{ time() }}">
+        <input type="text" name="website" class="honeypot-field" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;">
+        <button type="submit">Signer le livre d'or</button>
+      </form>
+    </div>
+
+    <div class="comments-list-col">
+      @forelse ($album->approvedGuestbookEntries as $entry)
+        <div class="comment">
+          <p class="comment-meta"><strong>{{ $entry->author_name }}</strong>{{ $entry->user_id ? ' ✓' : '' }} <span>— {{ $entry->created_at->translatedFormat('d F Y') }}</span></p>
+          <p class="comment-text">{{ $entry->message }}</p>
+        </div>
+      @empty
+        <p style="color:var(--ink-soft);font-size:14px;">Soyez le premier à signer le livre d'or.</p>
+      @endforelse
+    </div>
+  </div>
+</section>
+@endif
+
 <section class="comments">
   <h2>Commentaires ({{ $album->approvedComments->count() }})</h2>
 

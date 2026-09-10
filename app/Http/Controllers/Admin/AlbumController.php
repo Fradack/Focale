@@ -81,6 +81,7 @@ class AlbumController extends Controller
             'seo_description' => ['nullable', 'string', 'max:500'],
             'comments_enabled' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
+            'guestbook_enabled' => ['nullable', 'boolean'],
         ]);
 
         $password = $data['password'] ?? null;
@@ -89,6 +90,7 @@ class AlbumController extends Controller
         $data['seo_auto'] = $request->boolean('seo_auto');
         $data['comments_enabled'] = $request->boolean('comments_enabled');
         $data['is_featured'] = $request->boolean('is_featured');
+        $data['guestbook_enabled'] = $request->boolean('guestbook_enabled');
 
         $album->fill($data);
 

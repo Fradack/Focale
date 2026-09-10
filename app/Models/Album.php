@@ -18,6 +18,7 @@ class Album extends Model
         'credits_text', 'created_on', 'published_at', 'status', 'visibility',
         'password_hash', 'layout_type', 'seo_auto', 'seo_title',
         'seo_description', 'seo_image_id', 'comments_enabled', 'is_featured',
+        'guestbook_enabled',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Album extends Model
             'seo_auto' => 'boolean',
             'comments_enabled' => 'boolean',
             'is_featured' => 'boolean',
+            'guestbook_enabled' => 'boolean',
         ];
     }
 
@@ -62,6 +64,16 @@ class Album extends Model
     public function approvedComments(): HasMany
     {
         return $this->comments()->where('status', 'approved')->latest();
+    }
+
+    public function guestbookEntries(): HasMany
+    {
+        return $this->hasMany(\App\Plugins\LivreDor\Models\GuestbookEntry::class);
+    }
+
+    public function approvedGuestbookEntries(): HasMany
+    {
+        return $this->guestbookEntries()->where('status', 'approved')->latest();
     }
 
     public function likes(): HasMany

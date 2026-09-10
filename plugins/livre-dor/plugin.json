@@ -1,0 +1,6 @@
+{
+    "slug": "livre-dor",
+    "label": "Livre d'or",
+    "description": "Permet aux visiteurs de laisser un message sur les albums où l'admin l'a activé (ex. un mariage), avec modération avant publication.",
+    "version": "1.0.0"
+}

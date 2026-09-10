@@ -114,6 +114,12 @@
           Avis <x-plugin-badge/>
         </a>
       @endif
+      @if (\App\Support\Plugins::enabled('livre-dor') && \Illuminate\Support\Facades\Route::has('admin.livre-dor.index'))
+        <a href="{{ route('admin.livre-dor.index') }}" class="{{ $active === 'livre-dor' ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>
+          Livre d'or <x-plugin-badge/>
+        </a>
+      @endif
       <a href="{{ route('admin.plugins.index') }}" class="{{ $active === 'plugins' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"></rect><rect x="13" y="4" width="7" height="7" rx="1"></rect><rect x="4" y="13" width="7" height="7" rx="1"></rect><rect x="13" y="13" width="7" height="7" rx="1"></rect></svg>
         Plugins

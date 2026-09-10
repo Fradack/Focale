@@ -38,6 +38,10 @@
             <input type="checkbox" name="is_featured" value="1" @checked($album->is_featured)>
             Mettre en avant sur la page d'accueil
           </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);">
+            <input type="checkbox" name="guestbook_enabled" value="1" @checked($album->guestbook_enabled)>
+            Livre d'or activé
+          </label>
         </div>
         <div class="password-field {{ old('visibility', $album->visibility) === 'password' ? 'visible' : '' }}" id="password-field"
              style="margin-top:16px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;max-width:420px;{{ old('visibility', $album->visibility) === 'password' ? '' : 'display:none;' }}">

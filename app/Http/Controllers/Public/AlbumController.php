@@ -37,7 +37,7 @@ class AlbumController extends Controller
             return response()->view('public.album-lock', ['album' => $album])->setStatusCode(200);
         }
 
-        $album->load(['media.variants', 'approvedComments']);
+        $album->load(['media.variants', 'approvedComments', 'approvedGuestbookEntries']);
 
         return view('public.album', [
             'album' => $album,
