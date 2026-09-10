@@ -17,6 +17,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'not_installed' => \App\Http\Middleware\EnsureNotInstalled::class,
             'visit-log' => \App\Http\Middleware\LogSiteVisit::class,
             'staff' => \App\Http\Middleware\EnsureIsStaff::class,
+            'guest.customer' => \App\Http\Middleware\RedirectCustomerIfAuthenticated::class,
             'shop_enabled' => \App\Http\Middleware\EnsureShopEnabled::class,
         ]);
 

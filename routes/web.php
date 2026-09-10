@@ -198,7 +198,7 @@ require __DIR__.'/auth.php';
 // la navigation), prépare le futur système de commande de livre photo.
 // 'guest'/'auth' partagent le même garde standard que le reste du site.
 Route::prefix('compte')->name('customer.')->group(function () {
-    Route::middleware('guest')->group(function () {
+    Route::middleware('guest.customer')->group(function () {
         Route::get('inscription', [CustomerAccountController::class, 'showRegister'])->name('register');
         Route::post('inscription', [CustomerAccountController::class, 'register'])
             ->middleware('throttle:5,1')
