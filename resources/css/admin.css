@@ -535,7 +535,7 @@ a { color: inherit; text-decoration: none; }
 .visibility svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.6; }
 
 /* Tables */
-.table-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.table-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 
 thead th {
