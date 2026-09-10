@@ -101,7 +101,7 @@ class MediaIngestService
             // relance jamais le traitement et la photo reste bloquée pour
             // toujours dès le premier échec.
             if (! $existing->isVideo() && $existing->variants()->count() < 3) {
-                if (\App\Support\Plugins::enabled('nop')) {
+                if (\App\Support\Plugins::enabled('nip')) {
                     $this->createRawVariants($existing);
                 } elseif ($processSynchronously) {
                     GenerateMediaVariants::dispatchSync($existing);
@@ -117,17 +117,17 @@ class MediaIngestService
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
         $isVideo = str_starts_with((string) $file->getMimeType(), 'video/');
 
-        // Plugin NOP ("no image processing") : le fichier brut est publié
+        // Plugin NIP ("no image processing") : le fichier brut est publié
         // tel quel, sans passer par GenerateMediaVariants — utile pour un
         // import express quand la qualité/le poids des variantes WebP
         // générées n'a pas d'importance, ou pour économiser le temps de
         // traitement sur un hébergement contraint.
-        $skipProcessing = ! $isVideo && \App\Support\Plugins::enabled('nop');
+        $skipProcessing = ! $isVideo && \App\Support\Plugins::enabled('nip');
 
         // Les images restent sur le disque privé "media" (originaux jamais
         // servis directement — voir GenerateMediaVariants qui en dérive des
         // variantes publiques). Une vidéo n'a pas de variante dérivée, et un
-        // import NOP ne dérive rien non plus : les deux doivent être servis
+        // import NIP ne dérive rien non plus : les deux doivent être servis
         // tels quels, donc directement sur le disque "public" plutôt que de
         // passer par un disque privé sans jamais en sortir.
         $diskPath = match (true) {
@@ -200,7 +200,7 @@ class MediaIngestService
     }
 
     /**
-     * Plugin NOP : crée les 3 lignes de variantes attendues par
+     * Plugin NIP : crée les 3 lignes de variantes attendues par
      * MediaProcessingStatus, toutes pointant vers le fichier original —
      * aucun redimensionnement/ré-encodage, contrairement à
      * GenerateMediaVariants. Le média est donc immédiatement "traité", sans

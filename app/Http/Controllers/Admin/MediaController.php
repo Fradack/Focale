@@ -113,15 +113,24 @@ class MediaController extends Controller
      * avoir à la supprimer puis la réimporter. Vidéo ou œuvre déjà traitée :
      * pas de traitement à relancer, on ne fait rien.
      */
+    /**
+     * Autorisé même quand les 3 variantes existent déjà en base : une ligne
+     * de variante peut exister sans que le fichier .webp réel soit
+     * exploitable (disque corrompu, fichier supprimé à la main…) — le seul
+     * moyen de le savoir est que la vignette ne s'affiche pas côté
+     * navigateur (voir onerror sur <img> dans la vue), pas le nombre de
+     * lignes en base. GenerateMediaVariants régénère par updateOrCreate,
+     * donc relancer ce job est sûr même sur une œuvre déjà "complète".
+     */
     public function retry(Media $media): RedirectResponse
     {
-        if (! $media->isVideo() && $media->variants()->count() < 3) {
-            GenerateMediaVariants::dispatch($media);
-
-            return back()->with('status', "Nouvel essai de traitement lancé pour « {$media->title} ».");
+        if ($media->isVideo()) {
+            return back()->with('status', 'Cette œuvre est déjà traitée.');
         }
 
-        return back()->with('status', 'Cette œuvre est déjà traitée.');
+        GenerateMediaVariants::dispatch($media);
+
+        return back()->with('status', "Nouvel essai de traitement lancé pour « {$media->title} ».");
     }
 
     public function processingStatus(): JsonResponse

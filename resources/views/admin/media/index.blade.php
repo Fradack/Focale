@@ -101,7 +101,7 @@
                           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
                         </div>
                       @elseif ($thumb = $item->variant('thumbnail'))
-                        <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}">
+                        <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}" loading="lazy" onerror="this.closest('tr').classList.add('has-broken-thumb');">
                       @else
                         <div style="width:48px;height:48px;border-radius:6px;background:var(--img-fallback);flex-shrink:0;"></div>
                       @endif
@@ -117,6 +117,11 @@
                       <form method="POST" action="{{ route('admin.media.retry', $item) }}" style="display:inline;margin-left:6px;">
                         @csrf
                         <button type="submit" class="pill" style="border-color:var(--warn);color:var(--warn);cursor:pointer;background:none;font-family:inherit;">↻ Réessayer</button>
+                      </form>
+                    @elseif (! $item->isVideo() && $thumb)
+                      <form method="POST" action="{{ route('admin.media.retry', $item) }}" class="thumb-reload-inline" style="margin-left:6px;">
+                        @csrf
+                        <button type="submit" class="pill" style="border-color:var(--danger);color:var(--danger);cursor:pointer;background:none;font-family:inherit;">↻ Vignette manquante</button>
                       </form>
                     @endif
                   </td>
@@ -137,7 +142,8 @@
                   <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" fill="none" stroke-width="1.4" style="color:var(--ink-soft);"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
                 </div>
               @elseif ($thumb = $item->variant('thumbnail'))
-                <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}">
+                <img src="{{ $thumb->url() }}" alt="{{ $item->alt_text }}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;this.closest('.media-item').classList.add('has-broken-thumb');">
+                <div class="thumb-broken" hidden style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--danger);text-align:center;padding:8px;">Vignette manquante</div>
               @else
                 <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--ink-soft);">Traitement…</div>
               @endif
@@ -148,6 +154,11 @@
                 <form method="POST" action="{{ route('admin.media.retry', $item) }}" style="position:absolute;bottom:6px;left:6px;right:6px;z-index:2;" onclick="event.stopPropagation();">
                   @csrf
                   <button type="submit" style="width:100%;padding:5px;font-size:11px;border-radius:6px;border:1px solid var(--warn);background:var(--bg);color:var(--warn);cursor:pointer;font-family:inherit;">↻ Réessayer</button>
+                </form>
+              @elseif (! $item->isVideo() && $thumb)
+                <form method="POST" action="{{ route('admin.media.retry', $item) }}" class="thumb-reload-form" style="position:absolute;bottom:6px;left:6px;right:6px;z-index:2;" onclick="event.stopPropagation();">
+                  @csrf
+                  <button type="submit" style="width:100%;padding:5px;font-size:11px;border-radius:6px;border:1px solid var(--danger);background:var(--bg);color:var(--danger);cursor:pointer;font-family:inherit;">↻ Recharger la vignette</button>
                 </form>
               @endif
               <a href="{{ route('admin.media.edit', $item) }}" class="media-item-edit-link" aria-label="Modifier"></a>
