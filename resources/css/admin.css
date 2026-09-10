@@ -942,3 +942,38 @@ td textarea { resize: vertical; min-height: 40px; }
 @media (max-width: 900px) {
   .updates-grid, .updates-grid.has-details { grid-template-columns: 1fr; }
 }
+
+/* Boutique de plugins */
+.plugin-store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 32px; }
+
+.plugin-card {
+  display: flex;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  color: inherit;
+  text-decoration: none;
+}
+.plugin-card:hover { border-color: var(--clay); }
+
+.plugin-card-icon, .plugin-detail-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.plugin-detail-icon { margin-bottom: 16px; }
+.plugin-card-icon svg, .plugin-detail-icon svg { width: 20px; height: 20px; stroke: var(--clay); fill: none; stroke-width: 1.6; }
+
+.plugin-card-body h3 { margin: 0; font-size: 15px; font-family: 'Fraunces', serif; font-weight: 500; }
+.plugin-card-body p { font-size: 13px; color: var(--ink-soft); margin: 6px 0 10px; }
+
+.plugin-card-status { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft); }
+.plugin-card-status.is-enabled { color: var(--ok); }

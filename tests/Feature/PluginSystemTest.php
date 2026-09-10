@@ -83,4 +83,31 @@ class PluginSystemTest extends TestCase
             ->assertOk()
             ->assertSee('Boutique');
     }
+
+    public function test_admin_nav_does_not_crash_when_tracking_enabled_without_its_route(): void
+    {
+        $staff = User::factory()->create(['is_customer' => false]);
+        Plugin::updateOrCreate(['slug' => 'tracking'], ['label' => 'Tracking', 'enabled' => true, 'installed_at' => now()]);
+
+        $this->actingAs($staff)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Tracking');
+    }
+
+    public function test_enabling_incompletely_installed_plugin_is_refused(): void
+    {
+        $staff = User::factory()->create(['is_customer' => false]);
+        Plugin::updateOrCreate(['slug' => 'tracking'], ['label' => 'Tracking', 'enabled' => false, 'installed_at' => now()]);
+
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(base_path('routes/plugins'));
+        \Illuminate\Support\Facades\File::put(base_path('routes/plugins/tracking.php'), '<?php return;');
+
+        try {
+            $this->actingAs($staff)->post(route('admin.plugins.enable', 'tracking'))
+                ->assertSessionHasErrors('plugin');
+            $this->assertFalse(Plugins::enabled('tracking'));
+        } finally {
+            \Illuminate\Support\Facades\File::delete(base_path('routes/plugins/tracking.php'));
+        }
+    }
 }

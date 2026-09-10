@@ -205,6 +205,16 @@ class PluginManager
 
     public function enable(string $slug): void
     {
+        // Un plugin téléchargé (routes/plugins/{slug}.php présent) doit
+        // aussi avoir ses classes copiées — sinon route()/Blade plantent
+        // ensuite sur toute page qui les référence (déjà arrivé en prod
+        // suite à une installation interrompue en plein milieu). Mieux vaut
+        // refuser l'activation que de casser tout le panel admin.
+        $routesFile = base_path("routes/plugins/{$slug}.php");
+        if (File::exists($routesFile) && ! File::isDirectory(app_path('Plugins/'.Str::studly($slug)))) {
+            throw new \RuntimeException("Installation incomplète (classes manquantes) — réinstalle le plugin avant de l'activer.");
+        }
+
         Plugin::whereKey($slug)->update(['enabled' => true]);
         Plugins::forget($slug);
 

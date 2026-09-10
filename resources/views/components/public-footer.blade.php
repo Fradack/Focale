@@ -30,9 +30,10 @@
   </div>
   <div class="site-footer-bottom">
     <span>{{ $footerCopyright }}</span>
+    <span>Focale v{{ config('focale.version') }}</span>
   </div>
 </footer>
 
-<x-cookie-consent-banner/>
+<x-cookie-consent-banner :consent="request()->cookie('focale_consent')"/>
 @includeIf('plugins.tracking.beacon')
 <x-antipillage-guard/>

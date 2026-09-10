@@ -196,6 +196,7 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::post('mises-a-jour/appliquer', [UpdateController::class, 'apply'])->name('updates.apply');
 
     Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
+    Route::get('plugins/{slug}', [PluginController::class, 'show'])->name('plugins.show');
     Route::post('plugins/{slug}/installer', [PluginController::class, 'install'])->name('plugins.install');
     Route::post('plugins/{slug}/activer', [PluginController::class, 'enable'])->name('plugins.enable');
     Route::post('plugins/{slug}/desactiver', [PluginController::class, 'disable'])->name('plugins.disable');

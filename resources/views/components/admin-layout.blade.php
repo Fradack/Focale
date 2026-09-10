@@ -96,7 +96,7 @@
           J'aime <x-plugin-badge/>
         </a>
       @endif
-      @if (\App\Support\Plugins::enabled('tracking'))
+      @if (\App\Support\Plugins::enabled('tracking') && \Illuminate\Support\Facades\Route::has('admin.tracking.index'))
         <a href="{{ route('admin.tracking.index') }}" class="{{ $active === 'tracking' ? 'active' : '' }}">
           <svg viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M7 15l4-6 4 3 5-8"></path></svg>
           Tracking <x-plugin-badge/>
