@@ -17,5 +17,10 @@
       @php($cartCount = app(\App\Services\Cart::class)->count())
       <a href="{{ route('public.cart.show') }}">Panier @if ($cartCount > 0) ({{ $cartCount }}) @endif</a>
     @endif
+    @if (auth()->check() && auth()->user()->is_customer)
+      <a href="{{ route('customer.dashboard') }}">{{ auth()->user()->name }}</a>
+    @else
+      <a href="{{ route('customer.login') }}">Connexion</a>
+    @endif
   </nav>
 </header>

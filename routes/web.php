@@ -63,6 +63,9 @@ Route::middleware(['maintenance', 'visit-log'])->group(function () {
     Route::post('/album/{album:slug}/commentaires', [PublicAlbumController::class, 'storeComment'])
         ->middleware('throttle:5,1')
         ->name('public.album.comment');
+    Route::post('/album/{album:slug}/aimer', [PublicAlbumController::class, 'toggleLike'])
+        ->middleware('throttle:30,1')
+        ->name('public.album.like');
     Route::get('/galerie', [PublicImageController::class, 'index'])->name('public.gallery');
     Route::get('/image/{media:slug}', [PublicImageController::class, 'show'])->name('public.image');
     Route::post('/image/{media:slug}/aimer', [PublicImageController::class, 'toggleLike'])

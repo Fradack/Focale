@@ -34,6 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
   :root {
     --bg: #E7E3DC; --panel: #EFEDE7; --ink: #1E1C19; --ink-soft: #5C574E;
@@ -55,6 +56,10 @@
   .slideshow-btn { margin-top: 22px; padding: 10px 22px; background: none; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink); font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer; }
   .slideshow-btn:hover { background: var(--ink); color: var(--bg); }
   .slideshow-btn.active { background: var(--clay); border-color: var(--clay); color: #fff; }
+  .like-btn { margin-top: 22px; margin-left: 10px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 10px 20px; cursor: pointer; font-size: 14px; color: var(--ink); font-family: inherit; }
+  .like-btn:hover { border-color: var(--clay); }
+  .like-btn i { color: #DC2626; font-size: 15px; }
+  .like-btn[aria-pressed="true"] { border-color: #DC2626; }
   .viewer { max-width: 1120px; margin: 0 auto; padding: 0 6vw; display: flex; align-items: center; gap: 48px; }
   .viewer-media { flex: 1.6; min-width: 0; height: 66vh; display: flex; align-items: center; justify-content: center; background: var(--img-fallback); overflow: hidden; }
   .viewer-media img { width: 100%; height: 100%; object-fit: contain; display: block; cursor: zoom-in; }
@@ -133,6 +138,10 @@
   @if ($album->media->count() > 1)
     <button class="slideshow-btn" id="slideshow-btn">Lancer le diaporama</button>
   @endif
+  <button type="button" id="album-like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+    <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
+    <span id="album-like-count">{{ $album->likes()->count() }}</span>
+  </button>
 </div>
 
 @if ($processingStatus['pending'] > 0)
@@ -185,6 +194,7 @@
         @endforeach
         data-date="{{ $item->taken_at?->format('d/m/Y à H:i') }}"
         data-location="{{ $item->displayLocation() }}"
+        data-location-map="{{ $item->mapUrl() }}"
         data-video="{{ $item->isVideo() ? '1' : '0' }}"
         src="{{ $item->isVideo() ? 'data:image/svg+xml;utf8,'.rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5C574E" stroke-width="1.2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>') : $item->sourceUrl() }}"
         alt="{{ $item->alt_text }}">
@@ -205,7 +215,11 @@
           @endif
           @error('author_name') <p class="comment-error">{{ $message }}</p> @enderror
           @error('body') <p class="comment-error">{{ $message }}</p> @enderror
-          <input type="text" name="author_name" placeholder="Votre nom" autocomplete="name" value="{{ old('author_name') }}">
+          @if (auth()->check() && auth()->user()->is_customer)
+            <p style="font-size:13px;color:var(--ink-soft);margin:0;">Vous commentez en tant que <strong style="color:var(--ink);">{{ auth()->user()->name }}</strong>.</p>
+          @else
+            <input type="text" name="author_name" placeholder="Votre nom" autocomplete="name" value="{{ old('author_name') }}">
+          @endif
           <textarea name="body" placeholder="Votre commentaire">{{ old('body') }}</textarea>
           <input type="hidden" name="form_started_at" value="{{ time() }}">
           <input type="text" name="website" class="honeypot-field" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;">
@@ -216,7 +230,7 @@
       <div class="comments-list-col">
         @forelse ($album->approvedComments as $comment)
           <div class="comment">
-            <p class="comment-meta"><strong>{{ $comment->author_name }}</strong> <span>— {{ $comment->created_at->translatedFormat('d F Y') }}</span></p>
+            <p class="comment-meta"><strong>{{ $comment->author_name }}</strong>{{ $comment->user_id ? ' ✓' : '' }} <span>— {{ $comment->created_at->translatedFormat('d F Y') }}</span></p>
             <p class="comment-text">{{ $comment->body }}</p>
           </div>
         @empty
@@ -301,7 +315,23 @@
     exifFields.forEach(([key, label]) => {
       if (!img.dataset[key]) return;
       const row = document.createElement('div');
-      row.innerHTML = `<dt>${label}</dt><dd>${img.dataset[key]}</dd>`;
+      const dt = document.createElement('dt');
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      if (key === 'location' && img.dataset.locationMap) {
+        const a = document.createElement('a');
+        a.href = img.dataset.locationMap;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.title = 'Voir sur la carte (OpenStreetMap)';
+        a.style.textDecoration = 'underline';
+        a.textContent = img.dataset[key];
+        dd.appendChild(a);
+      } else {
+        dd.textContent = img.dataset[key];
+      }
+      row.appendChild(dt);
+      row.appendChild(dd);
       vExif.appendChild(row);
     });
 
@@ -385,6 +415,35 @@
   } else {
     function stopSlideshow() { fullView.classList.remove('open'); }
   }
+</script>
+
+<script>
+  (function () {
+    const btn = document.getElementById('album-like-btn');
+    const icon = btn.querySelector('i');
+    const countEl = document.getElementById('album-like-count');
+    const likeUrl = @json(route('public.album.like', $album));
+    const csrfToken = @json(csrf_token());
+    let busy = false;
+
+    btn.addEventListener('click', () => {
+      if (busy) return;
+      busy = true;
+
+      fetch(likeUrl, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          btn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+          icon.classList.toggle('fa-solid', data.liked);
+          icon.classList.toggle('fa-regular', !data.liked);
+          countEl.textContent = data.count;
+        })
+        .finally(() => { busy = false; });
+    });
+  })();
 </script>
 
 @if ($processingStatus['pending'] > 0)

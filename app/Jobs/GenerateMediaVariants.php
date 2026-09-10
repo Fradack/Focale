@@ -37,6 +37,20 @@ class GenerateMediaVariants implements ShouldQueue
 
     public function handle(): void
     {
+        // Décoder une photo haute résolution via GD peut demander plusieurs
+        // centaines de Mo (largeur × hauteur × 4 octets, avant même le
+        // travail de redimensionnement/encodage) — largement au-dessus des
+        // limites par défaut de nombreux hébergements. Un dépassement est un
+        // fatal PHP non rattrapable par un try/catch : la seule protection
+        // possible est d'éviter qu'il survienne. Ce réglage ne s'applique
+        // qu'à cette tâche précise, jamais au reste de l'application.
+        if (function_exists('ini_set')) {
+            $current = ini_get('memory_limit');
+            if ($current !== '-1' && $this->toBytes($current) < 512 * 1024 * 1024) {
+                @ini_set('memory_limit', '512M');
+            }
+        }
+
         $original = Storage::disk('media')->path($this->media->disk_path);
         $manager = new ImageManager(Driver::class);
 
@@ -65,5 +79,23 @@ class GenerateMediaVariants implements ShouldQueue
                 ]
             );
         }
+    }
+
+    /**
+     * Convertit une valeur ini PHP ("128M", "1G", "512K", "1073741824") en
+     * octets, pour comparer une limite existante avant de tenter de l'augmenter.
+     */
+    private function toBytes(string $value): int
+    {
+        $value = trim($value);
+        $unit = strtolower(substr($value, -1));
+        $number = (int) $value;
+
+        return match ($unit) {
+            'g' => $number * 1024 * 1024 * 1024,
+            'm' => $number * 1024 * 1024,
+            'k' => $number * 1024,
+            default => (int) $value,
+        };
     }
 }

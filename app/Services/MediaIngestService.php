@@ -94,6 +94,20 @@ class MediaIngestService
 
         $existing = Media::where('checksum', $checksum)->whereNull('trashed_at')->first();
         if ($existing) {
+            // Pas un vrai doublon à ignorer si le traitement précédent n'est
+            // jamais allé au bout (ex. une photo trop lourde a fait planter
+            // le job en cours de route, sans jamais marquer l'œuvre comme
+            // traitée) : sans ce garde-fou, réimporter le même fichier ne
+            // relance jamais le traitement et la photo reste bloquée pour
+            // toujours dès le premier échec.
+            if (! $existing->isVideo() && $existing->variants()->count() < 3) {
+                if ($processSynchronously) {
+                    GenerateMediaVariants::dispatchSync($existing);
+                } else {
+                    GenerateMediaVariants::dispatch($existing);
+                }
+            }
+
             return ['media' => $existing, 'duplicate' => true];
         }
 
@@ -115,6 +129,16 @@ class MediaIngestService
 
         $title = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
 
+        // Résolu une seule fois, à l'import — jamais à l'affichage — pour ne
+        // jamais faire dépendre le chargement d'une page publique d'un
+        // service externe. Reste null (repli sur les coordonnées brutes,
+        // voir Media::displayLocation()) si aucune coordonnée GPS ou si le
+        // service est indisponible.
+        $location = null;
+        if (isset($exif['gps_lat'], $exif['gps_lng'])) {
+            $location = app(ReverseGeocoder::class)->communeFor($exif['gps_lat'], $exif['gps_lng']);
+        }
+
         $media = Media::create([
             'uuid' => $uuid,
             'title' => $title,
@@ -127,6 +151,7 @@ class MediaIngestService
             'checksum' => $checksum,
             'status' => 'draft',
             'taken_at' => $exif['taken_at'] ?? null,
+            'location' => $location,
             'gps_lat' => $exif['gps_lat'] ?? null,
             'gps_lng' => $exif['gps_lng'] ?? null,
             'exif' => $exif['raw'] ?? null,

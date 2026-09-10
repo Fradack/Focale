@@ -64,6 +64,16 @@ class Album extends Model
         return $this->comments()->where('status', 'approved')->latest();
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(AlbumLike::class);
+    }
+
+    public function isLikedBy(string $visitorId): bool
+    {
+        return $this->likes()->where('visitor_id', $visitorId)->exists();
+    }
+
     public function focaleCollections(): BelongsToMany
     {
         return $this->belongsToMany(FocaleCollection::class, 'collection_album')

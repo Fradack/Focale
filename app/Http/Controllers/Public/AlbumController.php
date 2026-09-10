@@ -7,6 +7,7 @@ use App\Models\Album;
 use App\Services\MediaProcessingStatus;
 use App\Services\QueuePump;
 use App\Services\SpamGuard;
+use App\Support\Visitor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,26 @@ class AlbumController extends Controller
             'previous' => $this->neighbour($album, '<'),
             'next' => $this->neighbour($album, '>'),
             'processingStatus' => MediaProcessingStatus::forAlbum($album->id),
+            'liked' => $album->isLikedBy(Visitor::id()),
         ]);
+    }
+
+    public function toggleLike(Album $album): JsonResponse
+    {
+        abort_unless(in_array($album->status, ['published', 'unlisted'], true), 404);
+
+        $visitorId = Visitor::id();
+        $existing = $album->likes()->where('visitor_id', $visitorId)->first();
+
+        if ($existing) {
+            $existing->delete();
+            $liked = false;
+        } else {
+            $album->likes()->create(['visitor_id' => $visitorId]);
+            $liked = true;
+        }
+
+        return response()->json(['liked' => $liked, 'count' => $album->likes()->count()]);
     }
 
     public function processingStatus(Album $album): JsonResponse
@@ -74,8 +94,13 @@ class AlbumController extends Controller
             abort(404);
         }
 
+        // Un client connecté commente sous le nom de son compte — pas besoin
+        // de ressaisir un nom à chaque fois, et le commentaire lui reste
+        // rattaché (voir Comment::user()).
+        $customer = $request->user()?->is_customer ? $request->user() : null;
+
         $data = $request->validate([
-            'author_name' => ['required', 'string', 'max:255'],
+            'author_name' => [$customer ? 'nullable' : 'required', 'string', 'max:255'],
             'body' => ['required', 'string', 'max:2000'],
             'website' => ['prohibited'], // champ honeypot : doit rester vide
         ]);
@@ -85,7 +110,8 @@ class AlbumController extends Controller
         }
 
         $album->comments()->create([
-            'author_name' => $data['author_name'],
+            'user_id' => $customer?->id,
+            'author_name' => $customer->name ?? $data['author_name'],
             'body' => $data['body'],
             'status' => 'pending',
             'ip' => $request->ip(),

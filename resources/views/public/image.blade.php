@@ -134,9 +134,10 @@
         @endif
         @if ($media->displayLocation())
           <div><dt>Lieu</dt><dd>
-            {{ $media->displayLocation() }}
             @if ($media->mapUrl())
-              — <a href="{{ $media->mapUrl() }}" target="_blank" rel="noopener">Voir sur la carte ↗</a>
+              <a href="{{ $media->mapUrl() }}" target="_blank" rel="noopener" style="text-decoration:underline;" title="Voir sur la carte (OpenStreetMap)">{{ $media->displayLocation() }}</a>
+            @else
+              {{ $media->displayLocation() }}
             @endif
           </dd></div>
         @endif
