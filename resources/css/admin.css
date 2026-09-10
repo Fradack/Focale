@@ -542,6 +542,23 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 .alert-info { background: var(--panel); border-color: var(--line); color: var(--ink); }
 .alert-block { align-items: flex-start; text-align: left; }
 
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+.badge-danger { background: #F8ECEA; color: var(--danger); }
+.badge-warning { background: #F5EEDD; color: var(--warn); }
+.badge-success { background: #EEF3EC; color: var(--ok); }
+.badge-info { background: var(--panel); color: var(--ink-soft); border: 1px solid var(--line); }
+
 /* Un attribut hidden doit toujours gagner, même sur un élément qui a par
    ailleurs une classe fixant son display (ex: .alert, .processing-banner) —
    sans ça, la div reste visible malgré hidden dès qu'une classe pose son

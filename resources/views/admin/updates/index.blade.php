@@ -131,6 +131,24 @@
             // (jamais de HTML, pour éviter d'injecter du contenu non fiable) —
             // on structure juste ce qui ressemble à des puces ou des
             // paragraphes séparés par une ligne vide.
+            //
+            // Convention d'écriture des releases : une ligne peut commencer
+            // par « Ajout : », « Correction : », « Suppression : » ou
+            // « Information : » (insensible à la casse, espace avant les
+            // deux-points optionnel) pour afficher un badge de catégorie.
+            $noteBadges = [
+                'suppression' => ['label' => 'Suppression', 'class' => 'badge-danger'],
+                'correction' => ['label' => 'Correction', 'class' => 'badge-warning'],
+                'ajout' => ['label' => 'Ajout', 'class' => 'badge-success'],
+                'information' => ['label' => 'Information', 'class' => 'badge-info'],
+            ];
+            $parseNoteLine = function (string $line) use ($noteBadges): array {
+                if (preg_match('/^(' . implode('|', array_keys($noteBadges)) . ')\s*:\s*(.+)$/iu', $line, $m)) {
+                    return ['badge' => $noteBadges[mb_strtolower($m[1])], 'text' => $m[2]];
+                }
+                return ['badge' => null, 'text' => $line];
+            };
+
             $blocks = [];
             $currentList = [];
             foreach (preg_split('/\r\n|\r|\n/', trim($update['notes'])) as $line) {
@@ -139,14 +157,14 @@
                     continue;
                 }
                 if (str_starts_with($line, '- ') || str_starts_with($line, '* ')) {
-                    $currentList[] = ltrim(substr($line, 2));
+                    $currentList[] = $parseNoteLine(ltrim(substr($line, 2)));
                     continue;
                 }
                 if ($currentList) {
                     $blocks[] = ['list', $currentList];
                     $currentList = [];
                 }
-                $blocks[] = ['p', $line];
+                $blocks[] = ['p', $parseNoteLine($line)];
             }
             if ($currentList) {
                 $blocks[] = ['list', $currentList];
@@ -157,11 +175,21 @@
               @if ($kind === 'list')
                 <ul style="margin:0 0 12px;padding-left:20px;">
                   @foreach ($content as $item)
-                    <li style="margin-bottom:4px;">{{ $item }}</li>
+                    <li style="margin-bottom:4px;">
+                      @if ($item['badge'])
+                        <span class="badge {{ $item['badge']['class'] }}">{{ $item['badge']['label'] }}</span>
+                      @endif
+                      {{ $item['text'] }}
+                    </li>
                   @endforeach
                 </ul>
               @else
-                <p style="margin:0 0 12px;">{{ $content }}</p>
+                <p style="margin:0 0 12px;">
+                  @if ($content['badge'])
+                    <span class="badge {{ $content['badge']['class'] }}">{{ $content['badge']['label'] }}</span>
+                  @endif
+                  {{ $content['text'] }}
+                </p>
               @endif
             @endforeach
           </div>
