@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ShippingOptionController as AdminShippingOptionController;
+use App\Http\Controllers\Admin\ShopStatsController;
 use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
@@ -159,6 +160,7 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::delete('commentaires/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::get('statistiques', [StatsController::class, 'index'])->name('stats.index');
+    Route::get('statistiques-boutique', [ShopStatsController::class, 'index'])->name('shop-stats.index');
 
     Route::prefix('boutique')->name('shop.')->group(function () {
         Route::get('produits', [AdminProductController::class, 'index'])->name('products.index');

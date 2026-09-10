@@ -35,3 +35,4 @@
 
 <x-cookie-consent-banner/>
 @includeIf('plugins.tracking.beacon')
+<x-antipillage-guard/>

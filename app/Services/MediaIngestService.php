@@ -101,7 +101,9 @@ class MediaIngestService
             // relance jamais le traitement et la photo reste bloquée pour
             // toujours dès le premier échec.
             if (! $existing->isVideo() && $existing->variants()->count() < 3) {
-                if ($processSynchronously) {
+                if (\App\Support\Plugins::enabled('nop')) {
+                    $this->createRawVariants($existing);
+                } elseif ($processSynchronously) {
                     GenerateMediaVariants::dispatchSync($existing);
                 } else {
                     GenerateMediaVariants::dispatch($existing);
@@ -115,13 +117,25 @@ class MediaIngestService
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
         $isVideo = str_starts_with((string) $file->getMimeType(), 'video/');
 
+        // Plugin NOP ("no image processing") : le fichier brut est publié
+        // tel quel, sans passer par GenerateMediaVariants — utile pour un
+        // import express quand la qualité/le poids des variantes WebP
+        // générées n'a pas d'importance, ou pour économiser le temps de
+        // traitement sur un hébergement contraint.
+        $skipProcessing = ! $isVideo && \App\Support\Plugins::enabled('nop');
+
         // Les images restent sur le disque privé "media" (originaux jamais
         // servis directement — voir GenerateMediaVariants qui en dérive des
-        // variantes publiques). Une vidéo n'a pas de variante dérivée : elle
-        // doit être servie telle quelle, donc directement sur le disque
-        // "public" plutôt que passer par un disque privé sans jamais en sortir.
-        $diskPath = $isVideo ? "videos/{$uuid}.{$extension}" : "originals/{$uuid}.{$extension}";
-        Storage::disk($isVideo ? 'public' : 'media')->put($diskPath, file_get_contents($file->getRealPath()));
+        // variantes publiques). Une vidéo n'a pas de variante dérivée, et un
+        // import NOP ne dérive rien non plus : les deux doivent être servis
+        // tels quels, donc directement sur le disque "public" plutôt que de
+        // passer par un disque privé sans jamais en sortir.
+        $diskPath = match (true) {
+            $isVideo => "videos/{$uuid}.{$extension}",
+            $skipProcessing => "originaux-bruts/{$uuid}.{$extension}",
+            default => "originals/{$uuid}.{$extension}",
+        };
+        Storage::disk($isVideo || $skipProcessing ? 'public' : 'media')->put($diskPath, file_get_contents($file->getRealPath()));
 
         [$width, $height] = @getimagesize($file->getRealPath()) ?: [null, null];
 
@@ -174,6 +188,8 @@ class MediaIngestService
                     'filesize' => $file->getSize(),
                 ]);
             }
+        } elseif ($skipProcessing) {
+            $this->createRawVariants($media);
         } elseif ($processSynchronously) {
             GenerateMediaVariants::dispatchSync($media);
         } else {
@@ -181,6 +197,28 @@ class MediaIngestService
         }
 
         return ['media' => $media, 'duplicate' => false];
+    }
+
+    /**
+     * Plugin NOP : crée les 3 lignes de variantes attendues par
+     * MediaProcessingStatus, toutes pointant vers le fichier original —
+     * aucun redimensionnement/ré-encodage, contrairement à
+     * GenerateMediaVariants. Le média est donc immédiatement "traité", sans
+     * jamais passer par la file d'attente.
+     */
+    private function createRawVariants(Media $media): void
+    {
+        foreach (['thumbnail', 'web', 'retina'] as $type) {
+            $media->variants()->updateOrCreate(
+                ['type' => $type],
+                [
+                    'disk_path' => $media->disk_path,
+                    'width' => $media->width,
+                    'height' => $media->height,
+                    'filesize' => $media->filesize,
+                ]
+            );
+        }
     }
 
     private function uniqueSlug(string $title): string
