@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\GenerateMediaVariants;
 use App\Models\Album;
 use App\Models\Media;
 use App\Services\MediaIngestService;
@@ -28,7 +29,7 @@ class MediaController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Media::query()->whereNull('trashed_at');
+        $query = Media::query()->whereNull('trashed_at')->with('variants');
 
         if ($search = $request->query('q')) {
             $query->where(function ($q) use ($search) {
@@ -69,6 +70,10 @@ class MediaController extends Controller
                 'videos' => Media::whereNull('trashed_at')->where('mime_type', 'like', 'video/%')->count(),
                 'stuck' => $this->stuckQuery()->count(),
             ],
+            // Sert à afficher le bouton "Réessayer" uniquement sur les
+            // œuvres réellement bloquées depuis longtemps, pas sur un import
+            // qui vient de démarrer et progresse normalement.
+            'stuckBefore' => now()->subMinutes(self::STUCK_AFTER_MINUTES),
         ]);
     }
 
@@ -100,6 +105,23 @@ class MediaController extends Controller
             : $stuck->count()." œuvre(s) bloquée(s) mise(s) à la corbeille.";
 
         return redirect()->route('admin.media.index')->with('status', $message);
+    }
+
+    /**
+     * Relance le traitement d'une œuvre précise restée bloquée (ex. échec
+     * mémoire sur une photo trop lourde — voir GenerateMediaVariants) sans
+     * avoir à la supprimer puis la réimporter. Vidéo ou œuvre déjà traitée :
+     * pas de traitement à relancer, on ne fait rien.
+     */
+    public function retry(Media $media): RedirectResponse
+    {
+        if (! $media->isVideo() && $media->variants()->count() < 3) {
+            GenerateMediaVariants::dispatch($media);
+
+            return back()->with('status', "Nouvel essai de traitement lancé pour « {$media->title} ».");
+        }
+
+        return back()->with('status', 'Cette œuvre est déjà traitée.');
     }
 
     public function processingStatus(): JsonResponse
@@ -215,10 +237,11 @@ class MediaController extends Controller
             // vient de upload_max_filesize/post_max_size (PHP) et de la taille
             // de requête max du serveur web (souvent 8-32 Mo par défaut sur un
             // hébergement mutualisé) — des réglages hors de portée de Focale.
-            // 50 Mo laisse de la marge pour de grosses photos et de courtes
-            // vidéos sans imposer, côté appli, une limite plus stricte que
-            // celle déjà posée par l'hébergement.
-            'file' => ['required', 'file', 'max:51200', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'],
+            // 1 Go laisse la place à de longues vidéos sans imposer, côté
+            // appli, une limite plus stricte que celle déjà posée par
+            // l'hébergement (qu'il faudra très probablement relever aussi
+            // pour profiter réellement de ce plafond).
+            'file' => ['required', 'file', 'max:1048576', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'],
         ]);
 
         $result = $service->ingest($request->file('file'));

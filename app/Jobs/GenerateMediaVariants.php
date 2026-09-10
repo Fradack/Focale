@@ -44,10 +44,13 @@ class GenerateMediaVariants implements ShouldQueue
         // fatal PHP non rattrapable par un try/catch : la seule protection
         // possible est d'éviter qu'il survienne. Ce réglage ne s'applique
         // qu'à cette tâche précise, jamais au reste de l'application.
+        // 512M -> 1024M : les originaux acceptés vont désormais jusqu'à 1 Go
+        // (voir MediaController::store()), un plafond plus bas serait la
+        // première chose à céder sur une très grosse photo.
         if (function_exists('ini_set')) {
             $current = ini_get('memory_limit');
-            if ($current !== '-1' && $this->toBytes($current) < 512 * 1024 * 1024) {
-                @ini_set('memory_limit', '512M');
+            if ($current !== '-1' && $this->toBytes($current) < 1024 * 1024 * 1024) {
+                @ini_set('memory_limit', '1024M');
             }
         }
 

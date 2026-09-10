@@ -111,7 +111,15 @@
                       </div>
                     </a>
                   </td>
-                  <td><span class="pill {{ $item->status === 'published' ? 'published' : 'draft' }}">{{ $item->status === 'published' ? 'Publiée' : 'Brouillon' }}</span></td>
+                  <td>
+                    <span class="pill {{ $item->status === 'published' ? 'published' : 'draft' }}">{{ $item->status === 'published' ? 'Publiée' : 'Brouillon' }}</span>
+                    @if (! $item->isVideo() && $item->variants->count() < 3 && $item->created_at < $stuckBefore)
+                      <form method="POST" action="{{ route('admin.media.retry', $item) }}" style="display:inline;margin-left:6px;">
+                        @csrf
+                        <button type="submit" class="pill" style="border-color:var(--warn);color:var(--warn);cursor:pointer;background:none;font-family:inherit;">↻ Réessayer</button>
+                      </form>
+                    @endif
+                  </td>
                   <td>{{ number_format($item->filesize / 1048576, 1) }} Mo</td>
                   <td>{{ $item->created_at->diffForHumans() }}</td>
                 </tr>
@@ -135,6 +143,12 @@
               @endif
               @if ($item->status === 'draft')
                 <span class="cover-badge" style="display:block;background:var(--warn);">Brouillon</span>
+              @endif
+              @if (! $item->isVideo() && $item->variants->count() < 3 && $item->created_at < $stuckBefore)
+                <form method="POST" action="{{ route('admin.media.retry', $item) }}" style="position:absolute;bottom:6px;left:6px;right:6px;z-index:2;" onclick="event.stopPropagation();">
+                  @csrf
+                  <button type="submit" style="width:100%;padding:5px;font-size:11px;border-radius:6px;border:1px solid var(--warn);background:var(--bg);color:var(--warn);cursor:pointer;font-family:inherit;">↻ Réessayer</button>
+                </form>
               @endif
               <a href="{{ route('admin.media.edit', $item) }}" class="media-item-edit-link" aria-label="Modifier"></a>
             </label>

@@ -18,9 +18,13 @@ use Illuminate\Support\Facades\DB;
  */
 class QueuePump
 {
-    private const MAX_JOBS = 15;
+    // 15 -> 30, 20 -> 28s : vide la file plus vite à chaque page admin
+    // chargée. 28s (pas plus) laisse une marge sous les 30s de temps
+    // d'exécution par défaut de nombreux hébergements — au-delà, c'est tout
+    // le processus PHP qui se fait tuer en pleine tâche, pas juste un ralenti.
+    private const MAX_JOBS = 30;
 
-    private const MAX_SECONDS = 20;
+    private const MAX_SECONDS = 28;
 
     public static function pumpIfDue(): void
     {
@@ -34,7 +38,7 @@ class QueuePump
         }
 
         $worker = app('queue.worker');
-        $options = new WorkerOptions(maxTries: 1, timeout: 25, sleep: 0);
+        $options = new WorkerOptions(maxTries: 1, timeout: 28, sleep: 0);
 
         $deadline = microtime(true) + self::MAX_SECONDS;
         $processed = 0;

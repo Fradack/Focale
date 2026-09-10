@@ -112,6 +112,7 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::put('mediatheque/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('mediatheque/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
     Route::post('mediatheque/{media}/restaurer', [MediaController::class, 'restore'])->name('media.restore');
+    Route::post('mediatheque/{media}/reessayer', [MediaController::class, 'retry'])->name('media.retry');
 
     Route::get('albums', [AlbumController::class, 'index'])->name('albums.index');
     Route::post('albums', [AlbumController::class, 'store'])->name('albums.create');
