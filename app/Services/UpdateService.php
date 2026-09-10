@@ -129,7 +129,14 @@ class UpdateService
                     $swapped[] = $path;
                 }
 
-                File::copyDirectory($source, base_path($path));
+                // moveDirectory() (rename() en interne) plutôt que
+                // copyDirectory() : un renommage est quasi instantané, quel
+                // que soit le nombre de fichiers, alors qu'une copie
+                // fichier-par-fichier de vendor/ (des milliers de fichiers)
+                // peut dépasser la limite d'exécution de l'hébergement en
+                // plein milieu — laissant vendor/ à moitié copié et
+                // l'application entière cassée (incident vécu en prod).
+                File::moveDirectory($source, base_path($path));
             }
 
             // Les assets compilés (CSS/JS) ne sont pas dans les UPDATABLE_PATHS
@@ -144,7 +151,7 @@ class UpdateService
                     $publicBuildSwapped = true;
                 }
 
-                File::copyDirectory($publicBuildSource, public_path('build'));
+                File::moveDirectory($publicBuildSource, public_path('build'));
             }
         } catch (\Throwable $e) {
             foreach ($swapped as $path) {

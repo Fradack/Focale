@@ -183,7 +183,10 @@ class PluginManager
             $swapped[$target] = false;
         }
 
-        File::copyDirectory($source, $target);
+        // moveDirectory() plutôt que copyDirectory() — voir UpdateService,
+        // même principe (renommage quasi instantané vs copie fichier par
+        // fichier, risquée sous la limite d'exécution de l'hébergement).
+        File::moveDirectory($source, $target);
     }
 
     private function rollback(array $swappedDirs, array $copiedFiles): void
