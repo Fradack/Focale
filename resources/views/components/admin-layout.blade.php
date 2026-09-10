@@ -238,7 +238,7 @@
           // serveur…) : on ignore ce sondage sans toucher à l'état affiché,
           // plutôt que de risquer d'afficher un faux "terminé".
           if (! data || typeof data.total !== 'number' || typeof data.pending !== 'number') {
-            timer = setTimeout(poll, 8000);
+            timer = setTimeout(poll, 12000);
             return;
           }
 
@@ -248,7 +248,7 @@
             label.textContent = `Traitement des images (${formatEta(data.eta_minutes)})`;
             fill.style.width = data.percent + '%';
             count.textContent = `${data.processed} / ${data.total}`;
-            timer = setTimeout(poll, 4000);
+            timer = setTimeout(poll, 6000);
           } else if (!banner.hidden) {
             banner.classList.add('is-done');
             label.textContent = 'Traitement terminé';
@@ -257,7 +257,7 @@
             setTimeout(() => { banner.hidden = true; }, 4000);
           }
         })
-        .catch(() => { timer = setTimeout(poll, 8000); });
+        .catch(() => { timer = setTimeout(poll, 12000); });
     }
 
     poll();

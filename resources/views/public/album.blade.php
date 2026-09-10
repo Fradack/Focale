@@ -637,7 +637,7 @@
           // Réponse absente ou de forme inattendue : on réessaie plus tard
           // plutôt que de recharger la page à tort.
           if (! data || typeof data.total !== 'number' || typeof data.pending !== 'number') {
-            setTimeout(poll, 10000);
+            setTimeout(poll, 15000);
             return;
           }
 
@@ -645,15 +645,15 @@
             fill.style.width = data.percent + '%';
             count.textContent = `${data.processed} / ${data.total}`;
             label.textContent = `Certaines photos de cet album sont encore en cours de traitement (${formatEta(data.eta_minutes)})…`;
-            setTimeout(poll, 5000);
+            setTimeout(poll, 8000);
           } else {
             location.reload();
           }
         })
-        .catch(() => { setTimeout(poll, 10000); });
+        .catch(() => { setTimeout(poll, 15000); });
     }
 
-    setTimeout(poll, 5000);
+    setTimeout(poll, 8000);
   })();
 </script>
 @endif

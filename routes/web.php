@@ -61,7 +61,9 @@ Route::middleware(['maintenance', 'visit-log'])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/albums', [PublicAlbumController::class, 'index'])->name('public.albums');
     Route::get('/album/{album:slug}', [PublicAlbumController::class, 'show'])->name('public.album');
-    Route::get('/album/{album:slug}/statut-traitement', [PublicAlbumController::class, 'processingStatus'])->name('public.album.processing-status');
+    Route::get('/album/{album:slug}/statut-traitement', [PublicAlbumController::class, 'processingStatus'])
+        ->middleware('throttle:20,1')
+        ->name('public.album.processing-status');
     Route::post('/album/{album:slug}/deverrouiller', [PublicAlbumController::class, 'unlock'])
         ->middleware('throttle:10,1')
         ->name('public.album.unlock');
@@ -113,8 +115,12 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::post('mediatheque/import/dossier', [MediaController::class, 'importFromFolder'])->name('media.import-folder');
     Route::post('mediatheque/action', [MediaController::class, 'bulkAction'])->name('media.bulk');
     Route::post('mediatheque/vider-bloquees', [MediaController::class, 'clearStuck'])->name('media.clear-stuck');
-    Route::get('mediatheque/statut-traitement', [MediaController::class, 'processingStatus'])->name('media.processing-status');
-    Route::get('mediatheque/{media}/statut-traitement', [MediaController::class, 'itemProcessingStatus'])->name('media.item-processing-status');
+    Route::get('mediatheque/statut-traitement', [MediaController::class, 'processingStatus'])
+        ->middleware('throttle:20,1')
+        ->name('media.processing-status');
+    Route::get('mediatheque/{media}/statut-traitement', [MediaController::class, 'itemProcessingStatus'])
+        ->middleware('throttle:60,1')
+        ->name('media.item-processing-status');
     Route::get('mediatheque/{media}', [MediaController::class, 'edit'])->name('media.edit');
     Route::put('mediatheque/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('mediatheque/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
