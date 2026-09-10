@@ -149,9 +149,17 @@
                 return ['badge' => null, 'text' => $line];
             };
 
+            // Un BOM UTF-8 en tête de texte (fréquent quand les notes sont
+            // générées via un éditeur/outil qui l'ajoute par défaut) rend le
+            // tout premier caractère invisible mais bien présent : la regex
+            // ci-dessus, ancrée en début de ligne, ne matchait alors jamais
+            // la toute première ligne — aucun badge sur elle malgré un
+            // préfixe correct. On le retire avant tout traitement.
+            $notesText = ltrim($update['notes'], "\xEF\xBB\xBF");
+
             $blocks = [];
             $currentList = [];
-            foreach (preg_split('/\r\n|\r|\n/', trim($update['notes'])) as $line) {
+            foreach (preg_split('/\r\n|\r|\n/', trim($notesText)) as $line) {
                 $line = trim($line);
                 if ($line === '') {
                     continue;

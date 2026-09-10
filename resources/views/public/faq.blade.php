@@ -39,12 +39,12 @@
   <h1>Foire aux questions</h1>
   <p class="lede">Le fonctionnement du site, en bref.</p>
 
-  @foreach ($sections as $section)
-    <h2 class="section-title">{{ $section['title'] }}</h2>
-    @foreach ($section['items'] as $item)
+  @foreach ($sections as $category => $items)
+    <h2 class="section-title">{{ $category }}</h2>
+    @foreach ($items as $item)
       <details class="faq-tile">
-        <summary>{{ $item['q'] }}</summary>
-        <div class="faq-answer">{{ $item['a'] }}</div>
+        <summary>{{ $item->question }}</summary>
+        <div class="faq-answer">{{ $item->answer }}</div>
       </details>
     @endforeach
   @endforeach

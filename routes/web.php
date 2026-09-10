@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AlbumController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SettingController;
@@ -79,6 +80,7 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::post('mediatheque/import', [MediaController::class, 'store'])->name('media.store');
     Route::post('mediatheque/import/dossier', [MediaController::class, 'importFromFolder'])->name('media.import-folder');
     Route::post('mediatheque/action', [MediaController::class, 'bulkAction'])->name('media.bulk');
+    Route::post('mediatheque/vider-bloquees', [MediaController::class, 'clearStuck'])->name('media.clear-stuck');
     Route::get('mediatheque/statut-traitement', [MediaController::class, 'processingStatus'])->name('media.processing-status');
     Route::get('mediatheque/{media}/statut-traitement', [MediaController::class, 'itemProcessingStatus'])->name('media.item-processing-status');
     Route::get('mediatheque/{media}', [MediaController::class, 'edit'])->name('media.edit');
@@ -102,6 +104,13 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
     Route::get('pages/{page}', [AdminPageController::class, 'edit'])->name('pages.edit');
     Route::put('pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
     Route::delete('pages/{page}', [AdminPageController::class, 'destroy'])->name('pages.destroy');
+
+    Route::get('faq', [AdminFaqController::class, 'index'])->name('faq.index');
+    Route::get('faq/nouveau', [AdminFaqController::class, 'create'])->name('faq.create');
+    Route::post('faq', [AdminFaqController::class, 'store'])->name('faq.store');
+    Route::get('faq/{faqItem}', [AdminFaqController::class, 'edit'])->name('faq.edit');
+    Route::put('faq/{faqItem}', [AdminFaqController::class, 'update'])->name('faq.update');
+    Route::delete('faq/{faqItem}', [AdminFaqController::class, 'destroy'])->name('faq.destroy');
 
     Route::get('utilisateurs', [UserController::class, 'index'])->name('users.index');
     Route::get('utilisateurs/nouveau', [UserController::class, 'create'])->name('users.create');

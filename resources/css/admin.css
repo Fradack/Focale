@@ -24,6 +24,12 @@
   --success-tint: #EEF3EC;
   --danger-tint: #F8ECEA;
   --warning-tint: #F5EEDD;
+  /* Distinct de --panel : le badge "Information" est souvent posé à
+     l'intérieur d'un conteneur .panel (ex. page Mises à jour) — réutiliser
+     --panel pour son propre fond le rendrait invisible sur son propre
+     conteneur. Contraste vérifié ≥7:1 avec --info-text ci-dessous. */
+  --info-tint: #E3DFD3;
+  --info-text: #4A4438;
   --hover-overlay: rgba(0, 0, 0, 0.04);
   /* --clay sert à la fois de fond plein (boutons primaires, avatar — texte
      blanc dessus) et, une fois via .browse-btn, de couleur de TEXTE sur le
@@ -63,6 +69,8 @@
   --success-tint: #1E2A20;
   --danger-tint: #2E1F1B;
   --warning-tint: #2C2718;
+  --info-tint: #3A342B;
+  --info-text: #D6CFC0;
   --hover-overlay: rgba(255, 255, 255, 0.06);
   --accent-text: #C08A63;
 }
@@ -608,7 +616,7 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 .badge-danger { background: var(--danger-tint); color: var(--danger); }
 .badge-warning { background: var(--warning-tint); color: var(--warn); }
 .badge-success { background: var(--success-tint); color: var(--ok); }
-.badge-info { background: var(--panel); color: var(--ink-soft); border: 1px solid var(--line); }
+.badge-info { background: var(--info-tint); color: var(--info-text); }
 
 /* Un attribut hidden doit toujours gagner, même sur un élément qui a par
    ailleurs une classe fixant son display (ex: .alert, .processing-banner) —

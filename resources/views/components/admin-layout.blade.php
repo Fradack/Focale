@@ -38,6 +38,10 @@
         <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path></svg>
         Pages
       </a>
+      <a href="{{ route('admin.faq.index') }}" class="{{ $active === 'faq' ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+        FAQ
+      </a>
       <a href="{{ route('admin.users.index') }}" class="{{ $active === 'users' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Utilisateurs

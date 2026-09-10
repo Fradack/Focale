@@ -47,15 +47,15 @@
     @endphp
     <div style="display:flex;align-items:flex-end;gap:3px;height:160px;border-bottom:1px solid var(--line);padding-bottom:2px;">
       @foreach ($days as $day)
-        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;height:100%;" title="{{ \Illuminate\Support\Carbon::parse($day['date'])->translatedFormat('d MMM') }} — {{ $day['visits'] }} page(s) vue(s), {{ $day['uniques'] }} visiteur(s) unique(s)">
+        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;height:100%;" title="{{ \Illuminate\Support\Carbon::parse($day['date'])->isoFormat('D MMM') }} — {{ $day['visits'] }} page(s) vue(s), {{ $day['uniques'] }} visiteur(s) unique(s)">
           <div style="width:45%;height:{{ max(2, round($day['visits'] / $maxVisits * 100)) }}%;background:var(--clay);border-radius:2px 2px 0 0;"></div>
           <div style="width:45%;height:{{ max(2, round($day['uniques'] / $maxVisits * 100)) }}%;background:var(--ok);border-radius:2px 2px 0 0;"></div>
         </div>
       @endforeach
     </div>
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:8px;">
-      <span>{{ \Illuminate\Support\Carbon::parse($days->first()['date'])->translatedFormat('d MMM') }}</span>
-      <span>{{ \Illuminate\Support\Carbon::parse($days->last()['date'])->translatedFormat('d MMM') }}</span>
+      <span>{{ \Illuminate\Support\Carbon::parse($days->first()['date'])->isoFormat('D MMM') }}</span>
+      <span>{{ \Illuminate\Support\Carbon::parse($days->last()['date'])->isoFormat('D MMM') }}</span>
     </div>
 
     <details style="margin-top:16px;">
@@ -72,7 +72,7 @@
           <tbody>
             @foreach ($days->reverse() as $day)
               <tr>
-                <td style="padding:6px 8px;border-bottom:1px solid var(--line);">{{ \Illuminate\Support\Carbon::parse($day['date'])->translatedFormat('d MMMM YYYY') }}</td>
+                <td style="padding:6px 8px;border-bottom:1px solid var(--line);">{{ \Illuminate\Support\Carbon::parse($day['date'])->isoFormat('D MMMM YYYY') }}</td>
                 <td style="padding:6px 8px;border-bottom:1px solid var(--line);">{{ $day['visits'] }}</td>
                 <td style="padding:6px 8px;border-bottom:1px solid var(--line);">{{ $day['uniques'] }}</td>
               </tr>

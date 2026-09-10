@@ -11,11 +11,25 @@
     <p style="font-size:13px;color:var(--ok);margin:-14px 0 20px;">{{ session('status') }}</p>
   @endif
 
+  @if ($counts['stuck'] > 0)
+    <div class="alert alert-warning alert-block" style="margin-bottom:20px;">
+      <div style="flex:1;">
+        <strong>{{ $counts['stuck'] }} œuvre(s) bloquée(s) en traitement depuis plus de 30 minutes.</strong>
+        <div style="margin-top:4px;">Ça arrive quand une photo trop lourde fait échouer son traitement en boucle et bloque celles derrière elle dans la file. Les mettre à la corbeille libère la file — inutile pour un import qui vient de démarrer, seulement pour un blocage prolongé.</div>
+      </div>
+      <form method="POST" action="{{ route('admin.media.clear-stuck') }}" data-confirm="Mettre à la corbeille les {{ $counts['stuck'] }} œuvre(s) bloquée(s) ? Cette action est réversible (corbeille)." style="flex-shrink:0;">
+        @csrf
+        <button type="submit" class="btn" style="white-space:nowrap;">Vider les œuvres bloquées</button>
+      </form>
+    </div>
+  @endif
+
   @php
     $baseQuery = request()->only('q');
   @endphp
   <form class="toolbar" method="GET">
     <input type="hidden" name="view" value="{{ $view }}">
+    <input type="hidden" name="status" value="{{ request('status') }}">
     <input type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher par titre ou tag…">
     <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view]) }}" class="filter-chip {{ ! request('status') ? 'active' : '' }}">Tous ({{ $counts['all'] }})</a>
     <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'published']) }}" class="filter-chip {{ request('status') === 'published' ? 'active' : '' }}">Publiées ({{ $counts['published'] }})</a>
@@ -23,6 +37,12 @@
     @if ($counts['processing'] > 0)
       <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'processing']) }}" class="filter-chip {{ request('status') === 'processing' ? 'active' : '' }}">En traitement ({{ $counts['processing'] }})</a>
     @endif
+
+    <select name="per_page" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;color:var(--ink);">
+      @foreach ($perPageOptions as $option)
+        <option value="{{ $option }}" @selected($perPage === $option)>{{ $option }} / page</option>
+      @endforeach
+    </select>
 
     <div class="view-toggle">
       <a href="{{ route('admin.media.index', $baseQuery + ['status' => request('status'), 'view' => 'grid']) }}" class="view-toggle-btn {{ $view === 'grid' ? 'active' : '' }}" aria-label="Vue grille">

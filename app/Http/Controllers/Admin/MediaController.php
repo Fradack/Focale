@@ -17,6 +17,16 @@ use Illuminate\View\View;
 
 class MediaController extends Controller
 {
+    private const PER_PAGE_OPTIONS = [25, 50, 75, 100, 150, 200];
+
+    /**
+     * Une œuvre "en cours de traitement" depuis plus longtemps que ça est
+     * considérée bloquée plutôt que simplement en attente normale — voir
+     * clearStuck(). Un import qui vient de démarrer ne doit jamais être
+     * proposé à la suppression.
+     */
+    private const STUCK_AFTER_MINUTES = 30;
+
     public function index(Request $request): View
     {
         $query = Media::query()->whereNull('trashed_at');
@@ -36,11 +46,18 @@ class MediaController extends Controller
             }
         }
 
-        $media = $query->latest()->paginate(60)->withQueryString();
+        $perPage = (int) $request->query('per_page', 50);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = 50;
+        }
+
+        $media = $query->latest()->paginate($perPage)->withQueryString();
 
         return view('admin.media.index', [
             'media' => $media,
             'view' => $request->query('view') === 'list' ? 'list' : 'grid',
+            'perPage' => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
             'albums' => Album::orderBy('title')->get(['id', 'title']),
             'counts' => [
                 'all' => Media::whereNull('trashed_at')->count(),
@@ -48,8 +65,39 @@ class MediaController extends Controller
                 'published' => Media::whereNull('trashed_at')->where('status', 'published')->count(),
                 'trashed' => Media::whereNotNull('trashed_at')->count(),
                 'processing' => Media::whereNull('trashed_at')->has('variants', '<', 3)->count(),
+                'stuck' => $this->stuckQuery()->count(),
             ],
         ]);
+    }
+
+    private function stuckQuery()
+    {
+        return Media::whereNull('trashed_at')
+            ->where('created_at', '<', now()->subMinutes(self::STUCK_AFTER_MINUTES))
+            ->has('variants', '<', 3);
+    }
+
+    /**
+     * Bouton de secours pour une file bloquée (voir la file "jobs" qui peut
+     * rester coincée sur un hébergement sans worker permanent) : met à la
+     * corbeille les œuvres en traitement depuis plus de 30 minutes, sans
+     * avoir besoin d'un accès direct à la base de données. Réversible
+     * (corbeille), jamais les œuvres qui viennent tout juste d'être importées.
+     */
+    public function clearStuck(): RedirectResponse
+    {
+        $stuck = $this->stuckQuery()->get();
+
+        $stuck->each(function (Media $item) {
+            $item->update(['trashed_at' => now()]);
+            $item->removeFromAlbums();
+        });
+
+        $message = $stuck->isEmpty()
+            ? "Aucune œuvre bloquée détectée."
+            : $stuck->count()." œuvre(s) bloquée(s) mise(s) à la corbeille.";
+
+        return redirect()->route('admin.media.index')->with('status', $message);
     }
 
     public function processingStatus(): JsonResponse
