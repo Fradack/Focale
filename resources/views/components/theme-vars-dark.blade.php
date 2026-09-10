@@ -70,4 +70,63 @@
   --danger: #E2665C;
   --field-bg: #1B2E22;
 }
+
+/* Les 4 blocs suivants reprennent les mêmes valeurs et les mêmes
+   justifications de contraste que leurs équivalents dans
+   resources/css/admin.css (voir les commentaires détaillés là-bas). */
+:root[data-theme="midnight"] {
+  --bg: #0B1220;
+  --panel: #131C2E;
+  --ink: #E7ECF5;
+  --ink-soft: #9FB0C9;
+  --clay: #2E5FA3;
+  --line: #26324A;
+  --img-fallback: #1A2438;
+  --active-bg: #E7ECF5;
+  --active-text: #0B1220;
+  --danger: #E2796A;
+  --field-bg: #182238;
+}
+
+:root[data-theme="sunset"] {
+  --bg: #1D1220;
+  --panel: #2A1B2E;
+  --ink: #F5E5D8;
+  --ink-soft: #CBA89E;
+  --clay: #C1552E;
+  --line: #4A2E45;
+  --img-fallback: #2E1D2E;
+  --active-bg: #F5E5D8;
+  --active-text: #1D1220;
+  --danger: #E2796A;
+  --field-bg: #2A1A28;
+}
+
+:root[data-theme="safari"] {
+  --bg: #1A1712;
+  --panel: #24201A;
+  --ink: #F0E8D8;
+  --ink-soft: #B8AC8E;
+  --clay: #7A6428;
+  --line: #45402E;
+  --img-fallback: #2E2A1F;
+  --active-bg: #F0E8D8;
+  --active-text: #1A1712;
+  --danger: #E2796A;
+  --field-bg: #221E17;
+}
+
+:root[data-theme="fullblack"] {
+  --bg: #000000;
+  --panel: #0D0D0D;
+  --ink: #EDEDED;
+  --ink-soft: #A0A0A0;
+  --clay: #A8570F;
+  --line: #262626;
+  --img-fallback: #1A1A1A;
+  --active-bg: #EDEDED;
+  --active-text: #000000;
+  --danger: #E2796A;
+  --field-bg: #141414;
+}
 </style>

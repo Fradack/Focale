@@ -134,6 +134,119 @@
   --accent-text: #D4A94E;
 }
 
+/* Bleu Minuit — bleu marine profond. Contraste vérifié : texte principal
+   15.8:1, texte atténué 8.5:1, accent-text 8.3:1, blanc sur --clay 6.4:1.
+   ok/warn/danger réutilisent les valeurs déjà vérifiées du thème Sombre
+   (même plage de luminance de fond, marge de contraste large). */
+:root[data-theme="midnight"] {
+  --bg: #0B1220;
+  --panel: #131C2E;
+  --sidebar: #0F1728;
+  --ink: #E7ECF5;
+  --ink-soft: #9FB0C9;
+  --clay: #2E5FA3;
+  --line: #26324A;
+  --img-fallback: #1A2438;
+  --ok: #7FAE82;
+  --warn: #D9AE4E;
+  --danger: #E2796A;
+
+  --field-bg: #182238;
+  --active-bg: #E7ECF5;
+  --active-text: #0B1220;
+  --success-tint: #16281E;
+  --danger-tint: #2E1B1A;
+  --warning-tint: #2E2415;
+  --info-tint: #1A2436;
+  --info-text: #C9D6E8;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #7FB0E8;
+}
+
+/* Sunset — prune profond, accents orangés. Contraste vérifié : texte
+   principal 14.7:1, texte atténué 8.3:1, accent-text 8.0:1, blanc sur
+   --clay 4.56:1 (limite AA, marge faible : ne pas assombrir --clay). */
+:root[data-theme="sunset"] {
+  --bg: #1D1220;
+  --panel: #2A1B2E;
+  --sidebar: #241726;
+  --ink: #F5E5D8;
+  --ink-soft: #CBA89E;
+  --clay: #C1552E;
+  --line: #4A2E45;
+  --img-fallback: #2E1D2E;
+  --ok: #7FAE82;
+  --warn: #D9AE4E;
+  --danger: #E2796A;
+
+  --field-bg: #2A1A28;
+  --active-bg: #F5E5D8;
+  --active-text: #1D1220;
+  --success-tint: #16281E;
+  --danger-tint: #2E1B1A;
+  --warning-tint: #2E2415;
+  --info-tint: #2C1E2A;
+  --info-text: #DDC7D6;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #E89A6B;
+}
+
+/* Safari — kaki/olive sur brun très sombre. Contraste vérifié : texte
+   principal 14.7:1, texte atténué 7.9:1, accent-text 7.8:1, blanc sur
+   --clay 5.7:1. */
+:root[data-theme="safari"] {
+  --bg: #1A1712;
+  --panel: #24201A;
+  --sidebar: #1E1B15;
+  --ink: #F0E8D8;
+  --ink-soft: #B8AC8E;
+  --clay: #7A6428;
+  --line: #45402E;
+  --img-fallback: #2E2A1F;
+  --ok: #7FAE82;
+  --warn: #D9AE4E;
+  --danger: #E2796A;
+
+  --field-bg: #221E17;
+  --active-bg: #F0E8D8;
+  --active-text: #1A1712;
+  --success-tint: #16281E;
+  --danger-tint: #2E1B1A;
+  --warning-tint: #2C2718;
+  --info-tint: #262218;
+  --info-text: #D9D0B8;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #C4A94E;
+}
+
+/* Fullblack — noir pur (fond OLED), accent ambre. Contraste vérifié : texte
+   principal 17.8:1 (fond à luminance nulle), accent-text 8.3:1, blanc sur
+   --clay 5.2:1 (valeur choisie après un premier essai trop clair à 4.3:1). */
+:root[data-theme="fullblack"] {
+  --bg: #000000;
+  --panel: #0D0D0D;
+  --sidebar: #080808;
+  --ink: #EDEDED;
+  --ink-soft: #A0A0A0;
+  --clay: #A8570F;
+  --line: #262626;
+  --img-fallback: #1A1A1A;
+  --ok: #7FAE82;
+  --warn: #D9AE4E;
+  --danger: #E2796A;
+
+  --field-bg: #141414;
+  --active-bg: #EDEDED;
+  --active-text: #000000;
+  --success-tint: #14211A;
+  --danger-tint: #271918;
+  --warning-tint: #272014;
+  --info-tint: #1C1C1C;
+  --info-text: #D0D0D0;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #E0904D;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -438,6 +551,24 @@ tbody tr { border-bottom: 1px solid var(--line); }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--hover-overlay); }
 td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
+
+/* Champs modifiables directement dans une cellule de tableau (ex. Boutique
+   → Paiement/Livraison/Produits) : même traitement visuel que .field
+   (bordure, fond, police), sans la marge verticale pensée pour un
+   formulaire empilé plutôt qu'une ligne de tableau. Case à cocher exclue :
+   elle doit garder son apparence native, pas une bordure pleine largeur. */
+td input:not([type="checkbox"]), td select, td textarea {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--field-bg);
+  color: var(--ink);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 13px;
+  appearance: none;
+}
+td textarea { resize: vertical; min-height: 40px; }
 
 .project-cell, .row-cell { display: flex; align-items: center; gap: 12px; }
 .project-cell img, .row-cell img {

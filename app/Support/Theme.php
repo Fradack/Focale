@@ -11,13 +11,17 @@ use App\Models\Setting;
  */
 class Theme
 {
-    public const THEMES = ['light', 'dark', 'halloween', 'noel'];
+    public const THEMES = ['light', 'dark', 'halloween', 'noel', 'midnight', 'sunset', 'safari', 'fullblack'];
 
     public const LABELS = [
         'light' => 'Clair',
         'dark' => 'Sombre',
         'halloween' => 'Halloween',
         'noel' => 'Noël',
+        'midnight' => 'Bleu Minuit',
+        'sunset' => 'Sunset',
+        'safari' => 'Safari',
+        'fullblack' => 'Fullblack',
     ];
 
     public static function adminTheme(): string
