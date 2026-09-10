@@ -128,15 +128,26 @@
     fillSlots();
   }
 
+  // Délai minimum entre deux envois, même quand le traitement est
+  // quasi instantané (plugin NIP, ou file déjà importée en doublon) : sans
+  // ça, la boucle enchaîne les requêtes aussi vite que le serveur répond et
+  // finit par déclencher la limitation de débit de l'hébergeur (erreur
+  // nginx "too many requests") sur un gros import.
+  const MIN_COOLDOWN_MS = 1000;
+
   // N'envoie jamais plus de `concurrency` fichiers en même temps : au-delà,
   // le reste attend son tour dans `pending`.
   function fillSlots() {
     while (active < concurrency && pending.length > 0) {
       const file = pending.shift();
       active++;
+      const startedAt = Date.now();
       uploadFile(file, () => {
-        active--;
-        fillSlots();
+        const wait = Math.max(0, MIN_COOLDOWN_MS - (Date.now() - startedAt));
+        setTimeout(() => {
+          active--;
+          fillSlots();
+        }, wait);
       });
     }
   }
