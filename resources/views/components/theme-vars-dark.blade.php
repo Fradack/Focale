@@ -1,10 +1,10 @@
-{{-- Palette sombre partagée par toutes les pages publiques : chaque page
-     garde son propre bloc `:root { ... }` (les valeurs claires varient
-     légèrement d'une page à l'autre) mais inclut ce partiel juste après pour
-     ajouter le pendant sombre, sans dupliquer 9 fois les mêmes valeurs.
-     Variables inutilisées par une page donnée : sans effet, pas d'erreur.
-     Même caractère chaleureux que la palette claire (pas de noir/blanc pur),
-     vérifié AA (≥4.5:1) texte sur fond et texte sur panneau. --}}
+{{-- Palettes sombre + saisonnières partagées par toutes les pages publiques :
+     chaque page garde son propre bloc `:root { ... }` (les valeurs claires
+     varient légèrement d'une page à l'autre) mais inclut ce partiel juste
+     après pour ajouter les autres thèmes, sans dupliquer 9 fois les mêmes
+     valeurs. Variables inutilisées par une page donnée : sans effet, pas
+     d'erreur. Même caractère chaleureux que la palette claire (pas de
+     noir/blanc pur), vérifié AA (≥4.5:1) texte sur fond et texte sur panneau. --}}
 <style>
 :root[data-theme="dark"] {
   --bg: #1B1815;
@@ -35,5 +35,39 @@
   /* Fond de bloc <pre> (page.blade.php) et de champs de formulaire admin :
      même repli var(--field-bg, #fff) que ci-dessus, pas de :root à toucher. */
   --field-bg: #2C2620;
+}
+
+/* Halloween — mêmes valeurs et mêmes justifications de contraste que le
+   bloc équivalent de resources/css/admin.css (texte principal 14.3:1,
+   atténué 8.3:1, blanc sur --clay 4.65:1). */
+:root[data-theme="halloween"] {
+  --bg: #1A1013;
+  --panel: #241722;
+  --ink: #F0DFC9;
+  --ink-soft: #C4A6A0;
+  --clay: #B85A16;
+  --line: #4A2E3D;
+  --img-fallback: #2E1D26;
+  --active-bg: #F0DFC9;
+  --active-text: #1A1013;
+  --danger: #E2544A;
+  --field-bg: #2A1B23;
+}
+
+/* Noël — mêmes valeurs et mêmes justifications de contraste que le bloc
+   équivalent de resources/css/admin.css (texte principal 15.2:1, atténué
+   8.3:1, blanc sur --clay 8.2:1). */
+:root[data-theme="noel"] {
+  --bg: #0F1B14;
+  --panel: #16261C;
+  --ink: #F5EDE0;
+  --ink-soft: #9FB8A8;
+  --clay: #8C2F2F;
+  --line: #2E4536;
+  --img-fallback: #1C2E22;
+  --active-bg: #F5EDE0;
+  --active-text: #0F1B14;
+  --danger: #E2665C;
+  --field-bg: #1B2E22;
 }
 </style>

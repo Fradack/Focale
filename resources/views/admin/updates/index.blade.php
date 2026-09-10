@@ -151,88 +151,33 @@
         </div>
 
         <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.03em;color:var(--ink-soft);margin:0 0 10px;">Notes de version</h3>
-        @if ($update['notes'])
-          @php
-            // Les notes viennent du corps de la release GitHub, en texte brut
-            // (jamais de HTML, pour éviter d'injecter du contenu non fiable) —
-            // on structure juste ce qui ressemble à des puces ou des
-            // paragraphes séparés par une ligne vide.
-            //
-            // Convention d'écriture des releases : une ligne peut commencer
-            // par « Ajout : », « Correction : », « Suppression : » ou
-            // « Information : » (insensible à la casse, espace avant les
-            // deux-points optionnel) pour afficher un badge de catégorie.
-            $noteBadges = [
-                'suppression' => ['label' => 'Suppression', 'class' => 'badge-danger'],
-                'correction' => ['label' => 'Correction', 'class' => 'badge-warning'],
-                'ajout' => ['label' => 'Ajout', 'class' => 'badge-success'],
-                'information' => ['label' => 'Information', 'class' => 'badge-info'],
-            ];
-            $parseNoteLine = function (string $line) use ($noteBadges): array {
-                if (preg_match('/^(' . implode('|', array_keys($noteBadges)) . ')\s*:\s*(.+)$/iu', $line, $m)) {
-                    return ['badge' => $noteBadges[mb_strtolower($m[1])], 'text' => $m[2]];
-                }
-                return ['badge' => null, 'text' => $line];
-            };
-
-            // Un BOM UTF-8 en tête de texte (fréquent quand les notes sont
-            // générées via un éditeur/outil qui l'ajoute par défaut) rend le
-            // tout premier caractère invisible mais bien présent : la regex
-            // ci-dessus, ancrée en début de ligne, ne matchait alors jamais
-            // la toute première ligne — aucun badge sur elle malgré un
-            // préfixe correct. On le retire avant tout traitement.
-            $notesText = ltrim($update['notes'], "\xEF\xBB\xBF");
-
-            $blocks = [];
-            $currentList = [];
-            foreach (preg_split('/\r\n|\r|\n/', trim($notesText)) as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
-                }
-                if (str_starts_with($line, '- ') || str_starts_with($line, '* ')) {
-                    $currentList[] = $parseNoteLine(ltrim(substr($line, 2)));
-                    continue;
-                }
-                if ($currentList) {
-                    $blocks[] = ['list', $currentList];
-                    $currentList = [];
-                }
-                $blocks[] = ['p', $parseNoteLine($line)];
-            }
-            if ($currentList) {
-                $blocks[] = ['list', $currentList];
-            }
-          @endphp
-          <div style="font-size:14px;line-height:1.7;color:var(--ink);">
-            @foreach ($blocks as [$kind, $content])
-              @if ($kind === 'list')
-                <ul style="margin:0 0 12px;padding-left:20px;">
-                  @foreach ($content as $item)
-                    <li style="margin-bottom:4px;">
-                      @if ($item['badge'])
-                        <span class="badge {{ $item['badge']['class'] }}">{{ $item['badge']['label'] }}</span>
-                      @endif
-                      {{ $item['text'] }}
-                    </li>
-                  @endforeach
-                </ul>
-              @else
-                <p style="margin:0 0 12px;">
-                  @if ($content['badge'])
-                    <span class="badge {{ $content['badge']['class'] }}">{{ $content['badge']['label'] }}</span>
-                  @endif
-                  {{ $content['text'] }}
-                </p>
-              @endif
-            @endforeach
-          </div>
-        @else
-          <p style="font-size:13px;color:var(--ink-soft);margin:0;">Aucune note de version fournie pour cette release.</p>
-        @endif
+        <x-release-notes :notes="$update['notes']" />
       </div>
     @endif
   </div>
+
+  @if ($lastInstalled)
+    <div class="panel" style="margin-top:24px;">
+      <h2 style="text-transform:none;letter-spacing:normal;font-size:16px;font-family:'Work Sans',sans-serif;font-weight:500;color:var(--ink-soft);margin:0 0 4px;">Dernière mise à jour installée</h2>
+      <h3 style="text-transform:none;letter-spacing:normal;font-size:18px;font-family:'Fraunces',serif;font-weight:500;color:var(--ink);margin:0 0 10px;">
+        {{ $lastInstalled['name'] ?: 'Version '.$lastInstalled['version'] }}
+      </h3>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-soft);margin-bottom:18px;">
+        <span>Version {{ $lastInstalled['version'] }}</span>
+        @if ($lastInstalled['appliedAt'])
+          <span>Installée le {{ \Illuminate\Support\Carbon::parse($lastInstalled['appliedAt'])->isoFormat('D MMMM YYYY \à H:mm') }}</span>
+        @elseif ($lastInstalled['publishedAt'])
+          <span>Publiée le {{ \Illuminate\Support\Carbon::parse($lastInstalled['publishedAt'])->isoFormat('D MMMM YYYY') }}</span>
+        @endif
+        @if ($lastInstalled['htmlUrl'])
+          <a href="{{ $lastInstalled['htmlUrl'] }}" target="_blank" rel="noopener" style="text-decoration:underline;">Voir sur GitHub ↗</a>
+        @endif
+      </div>
+
+      <x-release-notes :notes="$lastInstalled['notes']" />
+    </div>
+  @endif
 
   @if ($update['updateAvailable'])
     <script>

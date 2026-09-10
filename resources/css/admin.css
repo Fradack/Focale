@@ -40,11 +40,12 @@
   --accent-text: var(--clay);
 }
 
-/* Thème sombre — même caractère chaleureux que la palette claire (pas de
-   noir/blanc pur), couleurs vérifiées pour un contraste AA (≥4.5:1) texte
-   sur fond et texte sur teinte. Voir le rapport du fork pour le détail des
-   ratios calculés. Sélecteur sur :root (= <html>) avec [data-theme="dark"]
-   posé par admin-layout.blade.php selon le réglage `theme_dark_mode`. */
+/* Thèmes — même caractère chaleureux que la palette claire (pas de noir/blanc
+   pur), couleurs vérifiées pour un contraste AA (≥4.5:1) texte sur fond et
+   texte sur teinte (formule de luminance relative WCAG, calculée pas
+   estimée). Sélecteur sur :root (= <html>) avec [data-theme="..."] posé par
+   admin-layout.blade.php selon le réglage `theme_admin` (indépendant de
+   `theme_public`, voir Réglages → Apparence). */
 :root[data-theme="dark"] {
   --bg: #1B1815;
   --panel: #242019;
@@ -73,6 +74,64 @@
   --info-text: #D6CFC0;
   --hover-overlay: rgba(255, 255, 255, 0.06);
   --accent-text: #C08A63;
+}
+
+/* Halloween — citrouille/violet sur fond très sombre. Contraste vérifié :
+   texte principal 14.3:1, texte atténué 8.3:1, accent-text 7.8:1,
+   ok/warn/danger sur panneau 7-8.7:1, blanc sur --clay (bouton plein) 4.65:1. */
+:root[data-theme="halloween"] {
+  --bg: #1A1013;
+  --panel: #241722;
+  --sidebar: #1F1420;
+  --ink: #F0DFC9;
+  --ink-soft: #C4A6A0;
+  /* Fond plein assez sombre pour porter du texte blanc (≥4.5:1) — --accent-text
+     ci-dessous couvre l'usage en couleur de texte (plus clair, plus lisible). */
+  --clay: #B85A16;
+  --line: #4A2E3D;
+  --img-fallback: #2E1D26;
+  --ok: #8FBF6B;
+  --warn: #E0B23D;
+  --danger: #E2544A;
+
+  --field-bg: #2A1B23;
+  --active-bg: #F0DFC9;
+  --active-text: #1A1013;
+  --success-tint: #1E2A1A;
+  --danger-tint: #341F1E;
+  --warning-tint: #332612;
+  --info-tint: #33232C;
+  --info-text: #D9C4C0;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #E8944D;
+}
+
+/* Noël — rouge/or sur vert sapin très sombre. Contraste vérifié : texte
+   principal 15.2:1, texte atténué 8.3:1, or (accent/warn) 8.1:1, vert (ok)
+   7.3:1, rouge (danger) 4.7:1, blanc sur --clay (bouton plein) 8.2:1. */
+:root[data-theme="noel"] {
+  --bg: #0F1B14;
+  --panel: #16261C;
+  --sidebar: #12201A;
+  --ink: #F5EDE0;
+  --ink-soft: #9FB8A8;
+  --clay: #8C2F2F;
+  --line: #2E4536;
+  --img-fallback: #1C2E22;
+  --ok: #7FBF8A;
+  --warn: #D4A94E;
+  --danger: #E2665C;
+
+  --field-bg: #1B2E22;
+  --active-bg: #F5EDE0;
+  --active-text: #0F1B14;
+  --success-tint: #17281B;
+  --danger-tint: #2E1B1A;
+  --warning-tint: #2E2415;
+  --info-tint: #1C2A24;
+  --info-text: #C9DDD1;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #D4A94E;
 }
 
 * { box-sizing: border-box; }

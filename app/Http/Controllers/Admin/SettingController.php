@@ -15,7 +15,7 @@ class SettingController extends Controller
         'site_name', 'artist_name', 'bio', 'contact_email',
         'social_instagram', 'social_twitter', 'maintenance_mode',
         'home_cover_media_id', 'turnstile_site_key', 'turnstile_secret_key',
-        'footer_copyright', 'import_concurrency', 'import_one_by_one', 'theme_dark_mode',
+        'footer_copyright', 'import_concurrency', 'import_one_by_one', 'theme_admin', 'theme_public',
     ];
 
     public function edit(): View
@@ -24,7 +24,8 @@ class SettingController extends Controller
         $values['import_concurrency'] ??= 3;
         // Coché et recommandé par défaut : seul un réglage explicite à '0' le désactive.
         $values['import_one_by_one'] = $values['import_one_by_one'] !== '0';
-        $values['theme_dark_mode'] = \App\Support\Theme::mode();
+        $values['theme_admin'] = \App\Support\Theme::adminTheme();
+        $values['theme_public'] = \App\Support\Theme::publicTheme();
 
         return view('admin.settings.edit', [
             'values' => $values,
@@ -48,13 +49,15 @@ class SettingController extends Controller
             'footer_copyright' => ['nullable', 'string', 'max:255'],
             'import_concurrency' => ['nullable', 'integer', 'min:1', 'max:10'],
             'import_one_by_one' => ['nullable', 'boolean'],
-            'theme_dark_mode' => ['nullable', 'in:'.implode(',', \App\Support\Theme::SCOPES)],
+            'theme_admin' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
+            'theme_public' => ['nullable', 'in:'.implode(',', \App\Support\Theme::THEMES)],
         ]);
 
         $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
         $data['import_concurrency'] = $data['import_concurrency'] ?? 3;
         $data['import_one_by_one'] = $request->boolean('import_one_by_one') ? '1' : '0';
-        $data['theme_dark_mode'] = $data['theme_dark_mode'] ?? 'off';
+        $data['theme_admin'] = $data['theme_admin'] ?? 'light';
+        $data['theme_public'] = $data['theme_public'] ?? 'light';
 
         foreach (self::KEYS as $key) {
             Setting::set($key, $data[$key] ?? null);

@@ -5,34 +5,48 @@ namespace App\Support;
 use App\Models\Setting;
 
 /**
- * Thème sombre : un seul réglage (`theme_dark_mode`) choisit sur quelle(s)
- * surface(s) il s'applique — l'admin décide, voir Réglages → Apparence.
+ * Thème visuel — choisi séparément pour l'administration et le site public
+ * (deux réglages indépendants, voir Réglages → Apparence), avec des thèmes
+ * saisonniers en plus du sombre classique.
  */
 class Theme
 {
-    public const SCOPES = ['off', 'public', 'admin', 'both'];
+    public const THEMES = ['light', 'dark', 'halloween', 'noel'];
 
-    public static function mode(): string
+    public const LABELS = [
+        'light' => 'Clair',
+        'dark' => 'Sombre',
+        'halloween' => 'Halloween',
+        'noel' => 'Noël',
+    ];
+
+    public static function adminTheme(): string
     {
-        $value = Setting::get('theme_dark_mode', 'off');
-
-        return in_array($value, self::SCOPES, true) ? $value : 'off';
+        return self::normalize(Setting::get('theme_admin'));
     }
 
-    private static function isDarkFor(string $surface): bool
+    public static function publicTheme(): string
     {
-        $mode = self::mode();
-
-        return $mode === 'both' || $mode === $surface;
+        return self::normalize(Setting::get('theme_public'));
     }
 
-    public static function publicHtmlAttr(): string
+    private static function normalize(?string $value): string
     {
-        return self::isDarkFor('public') ? ' data-theme="dark"' : '';
+        return in_array($value, self::THEMES, true) ? $value : 'light';
     }
 
     public static function adminHtmlAttr(): string
     {
-        return self::isDarkFor('admin') ? ' data-theme="dark"' : '';
+        return self::htmlAttr(self::adminTheme());
+    }
+
+    public static function publicHtmlAttr(): string
+    {
+        return self::htmlAttr(self::publicTheme());
+    }
+
+    private static function htmlAttr(string $theme): string
+    {
+        return $theme === 'light' ? '' : ' data-theme="'.$theme.'"';
     }
 }

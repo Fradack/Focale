@@ -122,16 +122,25 @@
 
       <div class="panel">
         <h2>Apparence</h2>
-        <div class="field" style="max-width:280px;">
-          <label>Thème sombre</label>
-          <select name="theme_dark_mode">
-            <option value="off" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'off')>Désactivé</option>
-            <option value="public" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'public')>Site public uniquement</option>
-            <option value="admin" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'admin')>Administration uniquement</option>
-            <option value="both" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'both')>Site public + administration</option>
-          </select>
+        <div class="field-row">
+          <div class="field">
+            <label>Thème — Administration</label>
+            <select name="theme_admin">
+              @foreach (\App\Support\Theme::LABELS as $value => $label)
+                <option value="{{ $value }}" @selected(old('theme_admin', $values['theme_admin']) === $value)>{{ $label }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="field">
+            <label>Thème — Site public</label>
+            <select name="theme_public">
+              @foreach (\App\Support\Theme::LABELS as $value => $label)
+                <option value="{{ $value }}" @selected(old('theme_public', $values['theme_public']) === $value)>{{ $label }}</option>
+              @endforeach
+            </select>
+          </div>
         </div>
-        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Choisis où appliquer le thème sombre. Contrastes vérifiés pour rester lisible partout.</p>
+        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Chaque côté a son propre thème, choisi indépendamment. Contrastes vérifiés pour rester lisible dans tous les cas.</p>
       </div>
     </div>
 

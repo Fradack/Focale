@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -185,6 +186,83 @@ class UpdateService
 
         $this->updateVersionConfig($update['latest']);
         Cache::forget('focale.update_check');
+
+        Setting::set('last_update_version', $update['latest']);
+        Setting::set('last_update_name', $update['name']);
+        Setting::set('last_update_notes', $update['notes']);
+        Setting::set('last_update_published_at', $update['publishedAt']);
+        Setting::set('last_update_html_url', $update['htmlUrl']);
+        Setting::set('last_update_applied_at', now()->toIso8601String());
+    }
+
+    /**
+     * Détails de la dernière mise à jour effectivement installée sur ce
+     * déploiement, pour affichage en bas de la page Mises à jour. Vient du
+     * réglage enregistré par applyUpdate() ; si absent (aucune mise à jour
+     * appliquée depuis que ce suivi existe — par exemple juste après cette
+     * fonctionnalité elle-même), on retombe sur la release GitHub
+     * correspondant à la version actuellement installée, quand elle existe.
+     *
+     * @return array{version: string, name: ?string, notes: ?string, publishedAt: ?string, htmlUrl: ?string, appliedAt: ?string}|null
+     */
+    public function lastInstalledUpdate(): ?array
+    {
+        $version = Setting::get('last_update_version');
+
+        if ($version && $version === config('focale.version')) {
+            return [
+                'version' => $version,
+                'name' => Setting::get('last_update_name'),
+                'notes' => Setting::get('last_update_notes'),
+                'publishedAt' => Setting::get('last_update_published_at'),
+                'htmlUrl' => Setting::get('last_update_html_url'),
+                'appliedAt' => Setting::get('last_update_applied_at'),
+            ];
+        }
+
+        return $this->fetchReleaseForCurrentVersion();
+    }
+
+    /**
+     * @return array{version: string, name: ?string, notes: ?string, publishedAt: ?string, htmlUrl: ?string, appliedAt: ?string}|null
+     */
+    private function fetchReleaseForCurrentVersion(): ?array
+    {
+        $current = config('focale.version');
+
+        $release = Cache::remember("focale.release_details.{$current}", now()->addDay(), function () use ($current) {
+            try {
+                $response = Http::timeout(5)
+                    ->withHeaders(['Accept' => 'application/vnd.github+json'])
+                    ->get('https://api.github.com/repos/'.config('focale.update_repo')."/releases/tags/v{$current}");
+
+                if (! $response->successful()) {
+                    return null;
+                }
+
+                return [
+                    'name' => $response->json('name'),
+                    'notes' => $response->json('body'),
+                    'published_at' => $response->json('published_at'),
+                    'html_url' => $response->json('html_url'),
+                ];
+            } catch (\Throwable) {
+                return null;
+            }
+        });
+
+        if (! $release) {
+            return null;
+        }
+
+        return [
+            'version' => $current,
+            'name' => $release['name'] ?? null,
+            'notes' => $release['notes'] ?? null,
+            'publishedAt' => $release['published_at'] ?? null,
+            'htmlUrl' => $release['html_url'] ?? null,
+            'appliedAt' => null,
+        ];
     }
 
     private function backup(): void

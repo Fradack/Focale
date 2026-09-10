@@ -11,7 +11,10 @@ class UpdateController extends Controller
 {
     public function index(UpdateService $updates): View
     {
-        return view('admin.updates.index', ['update' => $updates->checkForUpdate()]);
+        return view('admin.updates.index', [
+            'update' => $updates->checkForUpdate(),
+            'lastInstalled' => $updates->lastInstalledUpdate(),
+        ]);
     }
 
     public function check(UpdateService $updates): RedirectResponse
