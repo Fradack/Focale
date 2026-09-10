@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Setting;
+use App\Services\IpCountryResolver;
 use App\Support\Countries;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,6 +20,7 @@ class SettingController extends Controller
         'home_cover_media_id', 'turnstile_site_key', 'turnstile_secret_key',
         'footer_copyright', 'theme_admin', 'theme_public',
         'country_restriction_mode', 'country_restriction_countries',
+        'bot_restriction_enabled',
     ];
 
     private const COUNTRY_RESTRICTION_MODES = ['disabled', 'blocklist', 'allowlist'];
@@ -36,6 +39,25 @@ class SettingController extends Controller
             'values' => $values,
             'coverCandidates' => Media::whereNull('trashed_at')->latest()->limit(60)->get(),
             'countries' => Countries::list(),
+        ]);
+    }
+
+    /**
+     * Diagnostic appelé en AJAX depuis la page Réglages ("Tester la
+     * détection") : la restriction géographique échoue silencieusement par
+     * conception (fail-open) en cas de souci réseau/hébergement, donc sans
+     * cet outil il n'y a aucun moyen de distinguer "mal configuré" de
+     * "la détection ne fonctionne pas sur ce serveur".
+     */
+    public function testGeo(Request $request, IpCountryResolver $resolver): JsonResponse
+    {
+        $ip = (string) $request->ip();
+        $country = $resolver->resolve($ip);
+
+        return response()->json([
+            'ip' => $ip,
+            'country' => $country,
+            'ok' => $country !== null,
         ]);
     }
 
@@ -62,12 +84,14 @@ class SettingController extends Controller
                     $fail('Code pays invalide.');
                 }
             }],
+            'bot_restriction_enabled' => ['nullable', 'boolean'],
         ]);
 
         $data['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
         $data['theme_admin'] = $data['theme_admin'] ?? 'light';
         $data['theme_public'] = $data['theme_public'] ?? 'light';
         $data['country_restriction_mode'] = $data['country_restriction_mode'] ?? 'disabled';
+        $data['bot_restriction_enabled'] = $request->boolean('bot_restriction_enabled') ? '1' : '0';
         $selectedCountries = array_values(array_unique(array_map('strtoupper', $data['country_restriction_countries'] ?? [])));
         $data['country_restriction_countries'] = json_encode($selectedCountries);
 

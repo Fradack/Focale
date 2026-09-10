@@ -201,6 +201,7 @@ Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->
 
     Route::get('reglages', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('reglages', [SettingController::class, 'update'])->name('settings.update');
+    Route::get('reglages/test-geo', [SettingController::class, 'testGeo'])->name('settings.test-geo');
 
     Route::get('mises-a-jour', [UpdateController::class, 'index'])->name('updates.index');
     Route::post('mises-a-jour/verifier', [UpdateController::class, 'check'])->name('updates.check');

@@ -15,9 +15,9 @@ class CountryRestrictionTest extends TestCase
     private function fakeGeo(?string $countryCode, int $status = 200): void
     {
         Http::fake([
-            'ip-api.com/*' => $countryCode === null
-                ? Http::response(['status' => 'fail', 'message' => 'invalid query'], $status)
-                : Http::response(['status' => 'success', 'countryCode' => $countryCode], $status),
+            'ipwho.is/*' => $countryCode === null
+                ? Http::response(['success' => false, 'message' => 'invalid query'], $status)
+                : Http::response(['success' => true, 'country_code' => $countryCode], $status),
         ]);
     }
 
@@ -174,5 +174,100 @@ class CountryRestrictionTest extends TestCase
             'country_restriction_mode' => 'blocklist',
             'country_restriction_countries' => ['ZZ'],
         ])->assertSessionHasErrors('country_restriction_countries.0');
+    }
+
+    public function test_bot_restriction_disabled_by_default_allows_bot_user_agent(): void
+    {
+        $this->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'])
+            ->get('/')
+            ->assertOk();
+    }
+
+    public function test_bot_restriction_blocks_a_known_crawler_user_agent(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+
+        $this->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'])
+            ->get('/')
+            ->assertStatus(403);
+    }
+
+    public function test_bot_restriction_blocks_a_generic_script_user_agent(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+
+        $this->withHeaders(['User-Agent' => 'python-requests/2.31.0'])
+            ->get('/')
+            ->assertStatus(403);
+    }
+
+    public function test_bot_restriction_blocks_a_missing_user_agent(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+
+        $this->withHeaders(['User-Agent' => ''])
+            ->get('/')
+            ->assertStatus(403);
+    }
+
+    public function test_bot_restriction_allows_a_real_browser_user_agent(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+
+        $this->withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'])
+            ->get('/')
+            ->assertOk();
+    }
+
+    public function test_bot_restriction_does_not_trigger_geolocation_lookup(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+        Http::fake();
+
+        $this->withHeaders(['User-Agent' => 'curl/8.4.0'])->get('/')->assertStatus(403);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_bot_restriction_bypassed_by_authenticated_staff(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+        $staff = User::factory()->create(['is_customer' => false]);
+
+        $this->actingAs($staff)
+            ->withHeaders(['User-Agent' => 'curl/8.4.0'])
+            ->get('/')
+            ->assertOk();
+    }
+
+    public function test_bot_restriction_does_not_affect_admin_panel(): void
+    {
+        Setting::set('bot_restriction_enabled', '1');
+        $staff = User::factory()->create(['is_customer' => false]);
+
+        $this->actingAs($staff)
+            ->withHeaders(['User-Agent' => 'curl/8.4.0'])
+            ->get(route('admin.dashboard'))
+            ->assertOk();
+    }
+
+    public function test_admin_can_test_geo_detection(): void
+    {
+        $staff = User::factory()->create(['is_customer' => false]);
+        $this->fakeGeo('FR');
+
+        $this->actingAs($staff)->get(route('admin.settings.test-geo'))
+            ->assertOk()
+            ->assertJson(['ok' => true, 'country' => 'FR']);
+    }
+
+    public function test_admin_test_geo_detection_reports_failure(): void
+    {
+        $staff = User::factory()->create(['is_customer' => false]);
+        $this->fakeGeo(null, 500);
+
+        $this->actingAs($staff)->get(route('admin.settings.test-geo'))
+            ->assertOk()
+            ->assertJson(['ok' => false, 'country' => null]);
     }
 }

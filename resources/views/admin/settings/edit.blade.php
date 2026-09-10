@@ -132,7 +132,48 @@
             @endforeach
           </div>
         </div>
+
+        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+          <button type="button" id="test-geo-btn" class="btn" style="font-size:13px;">Tester la détection</button>
+          <span id="test-geo-result" style="margin-left:10px;font-size:13px;color:var(--ink-soft);"></span>
+          <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">
+            Résout votre propre adresse IP pour vérifier que la détection de pays fonctionne réellement sur ce serveur. Si elle échoue systématiquement, la restriction géographique ne bloque plus personne (elle laisse toujours passer en cas d'échec).
+          </p>
+        </div>
+
+        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;">
+            <input type="checkbox" name="bot_restriction_enabled" value="1" @checked($values['bot_restriction_enabled'] === '1')>
+            Bloquer les robots (bots/crawlers), y compris les moteurs de recherche
+          </label>
+          <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">
+            Attention : bloque aussi Googlebot/Bingbot et les autres moteurs de recherche légitimes — le site disparaîtra progressivement des résultats de recherche tant que ce réglage est actif.
+          </p>
+        </div>
       </div>
+
+      <script>
+        (function () {
+          const btn = document.getElementById('test-geo-btn');
+          const result = document.getElementById('test-geo-result');
+          if (!btn) return;
+          btn.addEventListener('click', function () {
+            result.textContent = 'Test en cours…';
+            fetch(@json(route('admin.settings.test-geo')), { headers: { 'Accept': 'application/json' } })
+              .then((r) => r.json())
+              .then((data) => {
+                result.textContent = data.ok
+                  ? ('OK — votre IP (' + data.ip + ') est détectée comme : ' + data.country)
+                  : ('Échec — votre IP (' + data.ip + ') n\'a pas pu être résolue en pays (la restriction géographique laisse alors toujours passer).');
+                result.style.color = data.ok ? 'var(--ok)' : 'var(--danger)';
+              })
+              .catch(() => {
+                result.textContent = 'Erreur réseau lors du test.';
+                result.style.color = 'var(--danger)';
+              });
+          });
+        })();
+      </script>
 
       <div class="panel">
         <h2>Apparence</h2>
