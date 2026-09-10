@@ -44,6 +44,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'guest.customer' => \App\Http\Middleware\RedirectCustomerIfAuthenticated::class,
             'shop_enabled' => \App\Http\Middleware\EnsureShopEnabled::class,
             'likes_enabled' => \App\Http\Middleware\EnsureLikesEnabled::class,
+            'country-restriction' => \App\Http\Middleware\EnsureCountryAllowed::class,
         ]);
 
         $middleware->web(append: [

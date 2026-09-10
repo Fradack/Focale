@@ -101,6 +101,39 @@
         </label>
       </div>
 
+      <div class="panel" style="grid-column:1 / -1;">
+        <h2>Restriction géographique</h2>
+        <p style="font-size:12px;color:var(--ink-soft);margin:0 0 12px;">
+          Bloque l'accès au site public selon le pays du visiteur (détecté via son adresse IP, de façon approximative). Sans effet sur l'administration ni sur les visiteurs déjà connectés.
+        </p>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;">
+            <input type="radio" name="country_restriction_mode" value="disabled" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'disabled')>
+            Désactivé
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:6px;">
+            <input type="radio" name="country_restriction_mode" value="blocklist" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'blocklist')>
+            Bloquer certains pays
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:6px;">
+            <input type="radio" name="country_restriction_mode" value="allowlist" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'allowlist')>
+            Autoriser uniquement certains pays
+          </label>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label>Pays concernés</label>
+          <div style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:10px;display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:4px 12px;">
+            @php $selected = old('country_restriction_countries', $values['country_restriction_countries']); @endphp
+            @foreach ($countries as $code => $label)
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;">
+                <input type="checkbox" name="country_restriction_countries[]" value="{{ $code }}" @checked(in_array($code, $selected, true))>
+                {{ $label }}
+              </label>
+            @endforeach
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <h2>Apparence</h2>
         <div class="field-row">

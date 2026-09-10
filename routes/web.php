@@ -57,7 +57,7 @@ Route::prefix('installation')->name('install.')->middleware('not_installed')->gr
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('public.sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('public.robots');
 
-Route::middleware(['maintenance', 'visit-log'])->group(function () {
+Route::middleware(['maintenance', 'country-restriction', 'visit-log'])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/albums', [PublicAlbumController::class, 'index'])->name('public.albums');
     Route::get('/album/{album:slug}', [PublicAlbumController::class, 'show'])->name('public.album');
@@ -254,4 +254,4 @@ foreach (glob(base_path('routes/plugins/*.php')) as $pluginRouteFile) {
 
 // Doit rester la toute dernière route : capture les pages de contenu génériques
 // et ne doit donc jamais passer avant /administration/... ou les autres routes publiques.
-Route::middleware(['maintenance', 'visit-log'])->get('/{page:slug}', [PublicPageController::class, 'show'])->name('page.show');
+Route::middleware(['maintenance', 'country-restriction', 'visit-log'])->get('/{page:slug}', [PublicPageController::class, 'show'])->name('page.show');
