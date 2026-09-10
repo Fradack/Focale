@@ -144,6 +144,9 @@
       <span id="album-like-count">{{ $album->likes()->count() }}</span>
     </button>
   @endif
+  @if ($album->media->count() > 0)
+    <button type="button" class="slideshow-btn" id="gallery-view-btn" style="margin-left:10px;">Vue galerie</button>
+  @endif
 </div>
 
 @if ($processingStatus['pending'] > 0)
@@ -274,6 +277,7 @@
   const fullViewCaption = document.getElementById('full-view-caption');
   const fullViewClose = document.getElementById('full-view-close');
   const slideshowBtn = document.getElementById('slideshow-btn');
+  const galleryViewBtn = document.getElementById('gallery-view-btn');
 
   const exifFields = [
     ['camera', 'Appareil'], ['lens', 'Objectif'], ['focal-length', 'Focale'],
@@ -372,6 +376,41 @@
 
   fullViewClose.addEventListener('click', closeFullView);
   fullView.addEventListener('click', (e) => { if (e.target === fullView) closeFullView(); });
+
+  // Ouvre la visionneuse plein écran à l'image actuellement affichée, sans
+  // lancer le défilement automatique — navigation manuelle (clic/tactile/
+  // flèches) plutôt qu'un diaporama.
+  if (galleryViewBtn) {
+    galleryViewBtn.addEventListener('click', () => {
+      fullView.classList.add('open');
+      select(currentIndex);
+    });
+  }
+
+  // Glisser à gauche/droite dans la visionneuse plein écran pour changer
+  // d'image sur mobile, sans avoir à descendre jusqu'au strip de vignettes.
+  (function () {
+    const MIN_SWIPE_PX = 60;
+    let startX = null;
+    let startY = null;
+
+    fullView.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    fullView.addEventListener('touchend', (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      startX = null;
+
+      if (Math.abs(dx) < MIN_SWIPE_PX || Math.abs(dx) < Math.abs(dy)) return;
+
+      if (dx < 0) select((currentIndex + 1) % images.length);
+      else select((currentIndex - 1 + images.length) % images.length);
+    }, { passive: true });
+  })();
 
   document.addEventListener('keydown', (e) => {
     const tag = document.activeElement && document.activeElement.tagName;

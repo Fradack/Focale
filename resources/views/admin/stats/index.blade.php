@@ -45,14 +45,51 @@
     @php
       $maxVisits = max(1, $days->max('visits'));
     @endphp
-    <div style="display:flex;align-items:flex-end;gap:3px;height:160px;border-bottom:1px solid var(--line);padding-bottom:2px;">
+    <div id="daily-chart" style="position:relative;display:flex;align-items:flex-end;gap:3px;height:160px;border-bottom:1px solid var(--line);padding-bottom:2px;">
       @foreach ($days as $day)
-        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;height:100%;" title="{{ \Illuminate\Support\Carbon::parse($day['date'])->isoFormat('D MMM') }} — {{ $day['visits'] }} page(s) vue(s), {{ $day['uniques'] }} visiteur(s) unique(s)">
-          <div style="width:45%;height:{{ max(2, round($day['visits'] / $maxVisits * 100)) }}%;background:var(--clay);border-radius:2px 2px 0 0;"></div>
-          <div style="width:45%;height:{{ max(2, round($day['uniques'] / $maxVisits * 100)) }}%;background:var(--ok);border-radius:2px 2px 0 0;"></div>
+        <div class="daily-chart-col" style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;height:100%;cursor:default;"
+             data-tooltip="{{ \Illuminate\Support\Carbon::parse($day['date'])->isoFormat('D MMM') }} — {{ $day['visits'] }} page(s) vue(s), {{ $day['uniques'] }} visiteur(s) unique(s)">
+          <div style="width:45%;height:{{ max(2, round($day['visits'] / $maxVisits * 100)) }}%;background:var(--clay);border-radius:2px 2px 0 0;pointer-events:none;"></div>
+          <div style="width:45%;height:{{ max(2, round($day['uniques'] / $maxVisits * 100)) }}%;background:var(--ok);border-radius:2px 2px 0 0;pointer-events:none;"></div>
         </div>
       @endforeach
+      <div id="daily-chart-tooltip" style="position:absolute;display:none;z-index:10;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.4;padding:6px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.18);"></div>
     </div>
+
+    <script>
+      (function () {
+        const chart = document.getElementById('daily-chart');
+        const tooltip = document.getElementById('daily-chart-tooltip');
+        if (!chart || !tooltip) return;
+
+        chart.querySelectorAll('.daily-chart-col').forEach((col) => {
+          col.addEventListener('mouseenter', () => {
+            tooltip.textContent = col.dataset.tooltip;
+            tooltip.style.display = 'block';
+
+            const chartRect = chart.getBoundingClientRect();
+            const colRect = col.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+
+            // Au-dessus de la barre par défaut ; en dessous seulement s'il
+            // n'y a pas la place au-dessus (haut de page/fenêtre) — jamais
+            // hors écran dans un sens comme dans l'autre.
+            const spaceAbove = colRect.top - tooltipRect.height - 8;
+            const showBelow = spaceAbove < 0;
+
+            tooltip.style.top = showBelow
+              ? `${colRect.bottom - chartRect.top + 8}px`
+              : `${colRect.top - chartRect.top - tooltipRect.height - 8}px`;
+
+            let left = colRect.left - chartRect.left + colRect.width / 2 - tooltipRect.width / 2;
+            left = Math.max(0, Math.min(left, chart.clientWidth - tooltipRect.width));
+            tooltip.style.left = `${left}px`;
+          });
+
+          col.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+        });
+      })();
+    </script>
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:8px;">
       <span>{{ \Illuminate\Support\Carbon::parse($days->first()['date'])->isoFormat('D MMM') }}</span>
       <span>{{ \Illuminate\Support\Carbon::parse($days->last()['date'])->isoFormat('D MMM') }}</span>

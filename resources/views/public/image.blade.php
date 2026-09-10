@@ -201,6 +201,39 @@
       fetch(viewUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' } });
     }, 10000);
   })();
+
+  // Glisser à gauche/droite pour passer à la photo suivante/précédente sur
+  // mobile — évite d'avoir à défiler jusqu'en bas (liens précédent/suivant),
+  // cliquer, puis remonter à chaque photo.
+  (function () {
+    const previousUrl = @json($previous ? route('public.image', $previous) : null);
+    const nextUrl = @json($next ? route('public.image', $next) : null);
+    const zone = document.querySelector('.figure');
+    if (!zone) return;
+
+    const MIN_SWIPE_PX = 60;
+    let startX = null;
+    let startY = null;
+
+    zone.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    zone.addEventListener('touchend', (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      startX = null;
+
+      // Écart horizontal net et dominant par rapport au vertical — sinon un
+      // simple scroll vertical du doigt serait pris pour un swipe.
+      if (Math.abs(dx) < MIN_SWIPE_PX || Math.abs(dx) < Math.abs(dy)) return;
+
+      if (dx < 0 && nextUrl) window.location.href = nextUrl;
+      else if (dx > 0 && previousUrl) window.location.href = previousUrl;
+    }, { passive: true });
+  })();
 </script>
 
 </body>
