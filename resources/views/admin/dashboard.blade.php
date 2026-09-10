@@ -10,10 +10,21 @@
     </div>
   </div>
 
-  <p style="color:var(--ink-soft);font-size:14px;">
-    Le tableau de bord affichera les statistiques réelles (œuvres, albums, brouillons, espace disque)
-    une fois la médiathèque et les albums en place.
-  </p>
+  <div class="stats">
+    <div class="stat-card">
+      <span class="value">{{ number_format($publishedCount) }}</span>
+      <span class="label">Œuvres publiées</span>
+    </div>
+    <div class="stat-card">
+      <span class="value">{{ number_format($visitors7d) }}</span>
+      <span class="label">Visiteurs uniques (7 j.)</span>
+    </div>
+    <div class="stat-card">
+      <span class="value">{{ number_format($likesCount) }}</span>
+      <span class="label">Likes ❤ au total</span>
+    </div>
+  </div>
+  <p style="margin:-20px 0 24px;"><a href="{{ route('admin.stats.index') }}" style="font-size:13px;text-decoration:underline;color:var(--ink-soft);">Voir toutes les statistiques →</a></p>
 
   <div class="shortcuts" style="display:flex;gap:14px;margin-top:24px;">
     <a href="{{ route('admin.media.import') }}" class="shortcut-btn primary">

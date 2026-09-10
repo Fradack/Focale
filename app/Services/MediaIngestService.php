@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class MediaIngestService
 {
-    private const IMPORT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    private const IMPORT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm'];
 
     /**
      * Nombre max. de fichiers traités par appel, pour rester dans le temps
@@ -94,9 +94,15 @@ class MediaIngestService
 
         $uuid = (string) Str::uuid();
         $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
-        $diskPath = "originals/{$uuid}.{$extension}";
+        $isVideo = str_starts_with((string) $file->getMimeType(), 'video/');
 
-        Storage::disk('media')->put($diskPath, file_get_contents($file->getRealPath()));
+        // Les images restent sur le disque privé "media" (originaux jamais
+        // servis directement — voir GenerateMediaVariants qui en dérive des
+        // variantes publiques). Une vidéo n'a pas de variante dérivée : elle
+        // doit être servie telle quelle, donc directement sur le disque
+        // "public" plutôt que passer par un disque privé sans jamais en sortir.
+        $diskPath = $isVideo ? "videos/{$uuid}.{$extension}" : "originals/{$uuid}.{$extension}";
+        Storage::disk($isVideo ? 'public' : 'media')->put($diskPath, file_get_contents($file->getRealPath()));
 
         [$width, $height] = @getimagesize($file->getRealPath()) ?: [null, null];
 
@@ -121,7 +127,26 @@ class MediaIngestService
             'exif' => $exif['raw'] ?? null,
         ]);
 
-        GenerateMediaVariants::dispatch($media);
+        if ($isVideo) {
+            // Pas de traitement asynchrone pour une vidéo (pas de redimensionnement
+            // possible sans ffmpeg, absent de cet environnement) : on crée tout de
+            // suite les 3 lignes de variantes attendues par MediaProcessingStatus
+            // (sinon une vidéo resterait indéfiniment "en cours de traitement"),
+            // pointant vers le fichier vidéo lui-même. L'affichage public ignore
+            // ces lignes pour les vidéos et rend un <video> ou une tuile dédiée
+            // à la place — voir Media::isVideo()/sourceUrl().
+            foreach (['thumbnail', 'web', 'retina'] as $type) {
+                $media->variants()->create([
+                    'type' => $type,
+                    'disk_path' => $diskPath,
+                    'width' => 0,
+                    'height' => 0,
+                    'filesize' => $file->getSize(),
+                ]);
+            }
+        } else {
+            GenerateMediaVariants::dispatch($media);
+        }
 
         return ['media' => $media, 'duplicate' => false];
     }

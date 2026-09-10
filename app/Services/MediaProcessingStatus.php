@@ -55,26 +55,38 @@ class MediaProcessingStatus
     }
 
     /**
-     * Estime le temps restant à partir du débit observé ces dernières minutes
-     * (nombre d'œuvres ayant terminé leurs 3 variantes). Retourne null tant
-     * qu'on n'a pas assez de données récentes pour estimer un débit fiable.
+     * Estime le temps restant à partir du débit observé (nombre d'œuvres
+     * ayant terminé leurs 3 variantes par minute). La fenêtre de 10 minutes
+     * donne le débit le plus à jour, mais si rien ne s'est terminé pendant
+     * cette fenêtre précise (traitement lent, ou juste malchance sur le
+     * moment du sondage), on élargit progressivement plutôt que d'afficher
+     * indéfiniment « estimation en cours » alors que ça avance bel et bien,
+     * juste plus lentement. Retourne null seulement si rien n'a été traité
+     * du tout sur les dernières 24h (traitement réellement à l'arrêt).
      */
     private static function estimateEtaMinutes(int $pending): ?int
     {
-        $recentlyCompleted = DB::table('media_variants')
+        foreach ([self::RATE_WINDOW_MINUTES, 60, 24 * 60] as $windowMinutes) {
+            $rate = self::completionRatePerMinute($windowMinutes);
+
+            if ($rate !== null) {
+                return (int) ceil($pending / $rate);
+            }
+        }
+
+        return null;
+    }
+
+    private static function completionRatePerMinute(int $windowMinutes): ?float
+    {
+        $completed = DB::table('media_variants')
             ->select('media_id')
-            ->where('created_at', '>=', now()->subMinutes(self::RATE_WINDOW_MINUTES))
+            ->where('created_at', '>=', now()->subMinutes($windowMinutes))
             ->groupBy('media_id')
             ->havingRaw('COUNT(*) >= ?', [self::EXPECTED_VARIANTS])
             ->get()
             ->count();
 
-        if ($recentlyCompleted <= 0) {
-            return null;
-        }
-
-        $rate = $recentlyCompleted / self::RATE_WINDOW_MINUTES;
-
-        return (int) ceil($pending / $rate);
+        return $completed > 0 ? $completed / $windowMinutes : null;
     }
 }

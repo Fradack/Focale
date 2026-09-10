@@ -6,11 +6,15 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\UpdateController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Customer\AccountController as CustomerAccountController;
 use App\Http\Controllers\Install\InstallController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\AlbumController as PublicAlbumController;
 use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Public\FaqController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ImageController as PublicImageController;
 use App\Http\Controllers\Public\PageController as PublicPageController;
@@ -37,7 +41,7 @@ Route::prefix('installation')->name('install.')->middleware('not_installed')->gr
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('public.sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('public.robots');
 
-Route::middleware('maintenance')->group(function () {
+Route::middleware(['maintenance', 'visit-log'])->group(function () {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/albums', [PublicAlbumController::class, 'index'])->name('public.albums');
     Route::get('/album/{album:slug}', [PublicAlbumController::class, 'show'])->name('public.album');
@@ -50,6 +54,14 @@ Route::middleware('maintenance')->group(function () {
         ->name('public.album.comment');
     Route::get('/galerie', [PublicImageController::class, 'index'])->name('public.gallery');
     Route::get('/image/{media:slug}', [PublicImageController::class, 'show'])->name('public.image');
+    Route::post('/image/{media:slug}/aimer', [PublicImageController::class, 'toggleLike'])
+        ->middleware('throttle:30,1')
+        ->name('public.image.like');
+    Route::post('/image/{media:slug}/vue', [PublicImageController::class, 'recordView'])
+        ->middleware('throttle:30,1')
+        ->name('public.image.view');
+
+    Route::get('/faq', [FaqController::class, 'index'])->name('public.faq');
 
     Route::get('/contact', [ContactController::class, 'show'])->name('public.contact');
     Route::post('/contact', [ContactController::class, 'store'])
@@ -57,8 +69,9 @@ Route::middleware('maintenance')->group(function () {
         ->name('public.contact.store');
 });
 
-// Administration
-Route::prefix('administration')->name('admin.')->middleware('auth')->group(function () {
+// Administration — 'staff' bloque les comptes client (voir EnsureIsStaff) :
+// 'auth' seul ne vérifie que la connexion, jamais le rôle.
+Route::prefix('administration')->name('admin.')->middleware(['auth', 'staff'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::get('mediatheque', [MediaController::class, 'index'])->name('media.index');
@@ -90,9 +103,18 @@ Route::prefix('administration')->name('admin.')->middleware('auth')->group(funct
     Route::put('pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
     Route::delete('pages/{page}', [AdminPageController::class, 'destroy'])->name('pages.destroy');
 
+    Route::get('utilisateurs', [UserController::class, 'index'])->name('users.index');
+    Route::get('utilisateurs/nouveau', [UserController::class, 'create'])->name('users.create');
+    Route::post('utilisateurs', [UserController::class, 'store'])->name('users.store');
+    Route::get('utilisateurs/{user}', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('utilisateurs/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('utilisateurs/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
     Route::get('commentaires', [AdminCommentController::class, 'index'])->name('comments.index');
     Route::patch('commentaires/{comment}/approuver', [AdminCommentController::class, 'approve'])->name('comments.approve');
     Route::delete('commentaires/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+
+    Route::get('statistiques', [StatsController::class, 'index'])->name('stats.index');
 
     Route::get('reglages', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('reglages', [SettingController::class, 'update'])->name('settings.update');
@@ -107,6 +129,27 @@ Route::prefix('administration')->name('admin.')->middleware('auth')->group(funct
 
 require __DIR__.'/auth.php';
 
+// Comptes client — inscription volontairement non annoncée (aucun lien dans
+// la navigation), prépare le futur système de commande de livre photo.
+// 'guest'/'auth' partagent le même garde standard que le reste du site.
+Route::prefix('compte')->name('customer.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('inscription', [CustomerAccountController::class, 'showRegister'])->name('register');
+        Route::post('inscription', [CustomerAccountController::class, 'register'])
+            ->middleware('throttle:5,1')
+            ->name('register.store');
+        Route::get('connexion', [CustomerAccountController::class, 'showLogin'])->name('login');
+        Route::post('connexion', [CustomerAccountController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('login.store');
+    });
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
+        Route::post('deconnexion', [CustomerAccountController::class, 'logout'])->name('logout');
+    });
+});
+
 // Doit rester la toute dernière route : capture les pages de contenu génériques
 // et ne doit donc jamais passer avant /administration/... ou les autres routes publiques.
-Route::middleware('maintenance')->get('/{page:slug}', [PublicPageController::class, 'show'])->name('page.show');
+Route::middleware(['maintenance', 'visit-log'])->get('/{page:slug}', [PublicPageController::class, 'show'])->name('page.show');

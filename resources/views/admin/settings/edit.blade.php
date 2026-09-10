@@ -100,6 +100,16 @@
           <input type="number" name="import_concurrency" min="1" max="10" value="{{ old('import_concurrency', $values['import_concurrency']) }}">
         </div>
         <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nombre d'œuvres envoyées en même temps lors d'un import en gros lot. Réduis cette valeur si des imports échouent sur un hébergement modeste.</p>
+
+        <div style="border-top:1px solid var(--line);margin:16px 0;"></div>
+
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
+          <input type="checkbox" name="import_one_by_one" value="1" @checked($values['import_one_by_one'])>
+          Import une photo par une photo (recommandé)
+        </label>
+        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">
+          Chaque photo doit être entièrement envoyée puis traitée (100% de ses vignettes) avant que la suivante ne démarre — évite de surcharger le serveur. Désactive aussi l'import de masse depuis un dossier serveur (ci-dessous, dans la page d'import) tant que ce réglage est actif.
+        </p>
       </div>
 
       <div class="panel">
@@ -108,6 +118,20 @@
           <input type="checkbox" name="maintenance_mode" value="1" @checked($values['maintenance_mode'] === '1')>
           Activer le mode maintenance (site public masqué)
         </label>
+      </div>
+
+      <div class="panel">
+        <h2>Apparence</h2>
+        <div class="field" style="max-width:280px;">
+          <label>Thème sombre</label>
+          <select name="theme_dark_mode">
+            <option value="off" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'off')>Désactivé</option>
+            <option value="public" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'public')>Site public uniquement</option>
+            <option value="admin" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'admin')>Administration uniquement</option>
+            <option value="both" @selected(old('theme_dark_mode', $values['theme_dark_mode']) === 'both')>Site public + administration</option>
+          </select>
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Choisis où appliquer le thème sombre. Contrastes vérifiés pour rester lisible partout.</p>
       </div>
     </div>
 

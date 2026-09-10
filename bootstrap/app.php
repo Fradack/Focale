@@ -15,10 +15,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'maintenance' => \App\Http\Middleware\CheckMaintenanceMode::class,
             'not_installed' => \App\Http\Middleware\EnsureNotInstalled::class,
+            'visit-log' => \App\Http\Middleware\LogSiteVisit::class,
+            'staff' => \App\Http\Middleware\EnsureIsStaff::class,
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\EnsureInstalled::class,
+            \App\Http\Middleware\AssignVisitorId::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

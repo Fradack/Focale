@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +16,7 @@
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(28px, 5vw, 42px); margin: 0 0 16px; }
   p { color: var(--ink-soft); font-size: 15px; max-width: 42ch; margin: 0 auto; }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
   <div>

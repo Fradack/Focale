@@ -2,7 +2,7 @@
   $exifFieldLabels = \App\Models\Media::EXIF_FIELDS;
 @endphp
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -107,7 +107,7 @@
   .comment-form button { align-self: flex-start; padding: 11px 24px; background: var(--clay); border: none; border-radius: 999px; color: #fff; font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer; }
   .comment-form button:hover { opacity: 0.9; }
   .comment-notice { font-size: 13px; color: var(--ink-soft); margin: -4px 0 4px; }
-  .comment-error { font-size: 13px; color: #A3402E; margin: 0; }
+  .comment-error { font-size: 13px; color: var(--danger, #A3402E); margin: 0; }
   @media (max-width: 860px) { .viewer { flex-direction: column; } .viewer-info { width: auto; padding: 24px 0 0; border-left: none; border-top: 1px solid var(--line); } .viewer-media { height: 48vh; } }
   @media (max-width: 480px) { .honeypot-field { display: none !important; } }
   .processing-notice { display: flex; align-items: center; gap: 16px; max-width: 640px; margin: 0 auto; padding: 12px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
@@ -115,6 +115,7 @@
   .processing-notice-fill { height: 100%; background: var(--clay); transition: width 0.4s ease; }
   .processing-notice-count { flex-shrink: 0; font-weight: 500; white-space: nowrap; color: var(--ink-soft); }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 
@@ -182,9 +183,10 @@
         @foreach ($exifFieldLabels as $key => $label)
           data-{{ str_replace('_', '-', $key) }}="{{ $item->visibleExif()[$key] ?? '' }}"
         @endforeach
-        data-date="{{ $item->taken_at?->format('d/m/Y') }}"
-        data-location="{{ $item->hide_gps ? '' : $item->location }}"
-        src="{{ $item->variant('web')?->url() }}"
+        data-date="{{ $item->taken_at?->format('d/m/Y à H:i') }}"
+        data-location="{{ $item->displayLocation() }}"
+        data-video="{{ $item->isVideo() ? '1' : '0' }}"
+        src="{{ $item->isVideo() ? 'data:image/svg+xml;utf8,'.rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5C574E" stroke-width="1.2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>') : $item->sourceUrl() }}"
         alt="{{ $item->alt_text }}">
     @endforeach
   </div>
@@ -280,7 +282,11 @@
 
     vImg.src = img.src;
     vImg.alt = img.alt;
-    vTitle.textContent = img.dataset.title || '';
+    // Vidéo : pas d'aperçu ni de lecture inline dans ce viewer (juste la
+    // tuile de remplacement posée dans #photo-data) — un clic mène vers la
+    // fiche de l'œuvre, où <video controls> permet la vraie lecture.
+    vImg.style.cursor = img.dataset.video === '1' ? 'pointer' : '';
+    vTitle.textContent = (img.dataset.video === '1' ? '🎬 ' : '') + (img.dataset.title || '');
     vCaption.textContent = img.dataset.caption || '';
 
     vTags.innerHTML = '';
@@ -315,6 +321,11 @@
   select(0);
 
   vImg.addEventListener('click', (e) => {
+    const current = images[currentIndex];
+    if (current.dataset.video === '1') {
+      window.location.href = current.dataset.href;
+      return;
+    }
     if (slideshowBtn) {
       e.preventDefault();
       fullView.classList.add('open');

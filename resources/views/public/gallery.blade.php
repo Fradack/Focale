@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,9 +28,10 @@
   .pagination-pages { display: flex; gap: 6px; }
   .pagination-link { padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--ink-soft); }
   .pagination-link:hover { border-color: var(--ink); color: var(--ink); }
-  .pagination-link.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .pagination-link.active { background: var(--active-bg, var(--ink)); border-color: var(--active-bg, var(--ink)); color: var(--active-text, #fff); }
   .pagination-link.disabled { opacity: 0.4; }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 

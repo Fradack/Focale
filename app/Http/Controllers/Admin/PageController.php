@@ -70,8 +70,20 @@ class PageController extends Controller
         return redirect()->route('admin.pages.edit', $page)->with('status', 'page-updated');
     }
 
+    /**
+     * Pages légales créées automatiquement (voir la migration
+     * seed_legal_pages) : on évite leur suppression accidentelle, l'admin
+     * peut toujours les repasser en brouillon plutôt que les effacer.
+     */
+    private const PROTECTED_SLUGS = ['mentions-legales', 'cgu', 'cgv'];
+
     public function destroy(Page $page): RedirectResponse
     {
+        if (in_array($page->slug, self::PROTECTED_SLUGS, true)) {
+            return redirect()->route('admin.pages.index')
+                ->with('status', 'Cette page légale ne peut pas être supprimée — repasse-la en brouillon si besoin.');
+        }
+
         $page->delete();
 
         return redirect()->route('admin.pages.index')->with('status', 'page-deleted');

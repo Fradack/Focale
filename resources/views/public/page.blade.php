@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,9 +27,10 @@
   .content img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.4em 0 1.2em; display: block; }
   .content blockquote { margin: 0 0 1.2em; padding: 4px 20px; border-left: 3px solid var(--line); color: var(--ink); font-style: italic; }
   .content ul { margin: 0 0 1.2em; padding-left: 22px; }
-  .content pre { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; margin: 0 0 1.2em; }
+  .content pre { background: var(--field-bg, #fff); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; margin: 0 0 1.2em; }
   .content a { color: var(--ink); text-decoration: underline; }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 

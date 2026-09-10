@@ -8,6 +8,7 @@
     @foreach (\App\Models\Page::inNav()->orderBy('title')->get() as $navPage)
       <a href="{{ route('page.show', $navPage) }}">{{ $navPage->title }}</a>
     @endforeach
+    <a href="{{ route('public.faq') }}">FAQ</a>
     <a href="{{ route('public.contact') }}">Contact</a>
   </nav>
 </header>

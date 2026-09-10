@@ -14,6 +14,57 @@
   --ok: #4B6B4E;
   --warn: #8A6A1F;
   --danger: #A3402E;
+
+  /* Variables ajoutées pour le thème sombre : certains styles ci-dessous
+     utilisaient des couleurs en dur (#fff, rgba(0,0,0,…), teintes de badge)
+     qui ne pouvaient pas s'inverser automatiquement avec --ink/--bg. */
+  --field-bg: #fff;
+  --active-bg: var(--ink);
+  --active-text: #fff;
+  --success-tint: #EEF3EC;
+  --danger-tint: #F8ECEA;
+  --warning-tint: #F5EEDD;
+  --hover-overlay: rgba(0, 0, 0, 0.04);
+  /* --clay sert à la fois de fond plein (boutons primaires, avatar — texte
+     blanc dessus) et, une fois via .browse-btn, de couleur de TEXTE sur le
+     fond de page. Les deux usages ont des contraintes de contraste opposées
+     une fois --clay éclairci pour le mode sombre (voir le bloc dark
+     ci-dessous) : on les sépare donc en deux variables, identiques ici en
+     clair pour ne rien changer visuellement. */
+  --accent-text: var(--clay);
+}
+
+/* Thème sombre — même caractère chaleureux que la palette claire (pas de
+   noir/blanc pur), couleurs vérifiées pour un contraste AA (≥4.5:1) texte
+   sur fond et texte sur teinte. Voir le rapport du fork pour le détail des
+   ratios calculés. Sélecteur sur :root (= <html>) avec [data-theme="dark"]
+   posé par admin-layout.blade.php selon le réglage `theme_dark_mode`. */
+:root[data-theme="dark"] {
+  --bg: #1B1815;
+  --panel: #242019;
+  --sidebar: #201C18;
+  --ink: #EDE9E2;
+  --ink-soft: #B4AC9C;
+  /* #8C5A3D (pas #C08A63) : doit rester assez sombre pour porter du texte
+     blanc en fond plein (boutons primaires, avatar) à ≥4.5:1 — un ton plus
+     clair passerait en fond mais tomberait sous 3:1 avec du texte blanc
+     dessus. --accent-text ci-dessous couvre le cas inverse (clay utilisé
+     comme couleur de texte sur fond sombre, ex. .browse-btn). */
+  --clay: #8C5A3D;
+  --line: #423B32;
+  --img-fallback: #332E27;
+  --ok: #7FAE82;
+  --warn: #D9AE4E;
+  --danger: #E2796A;
+
+  --field-bg: #2C2620;
+  --active-bg: #EDE9E2;
+  --active-text: #1E1C19;
+  --success-tint: #1E2A20;
+  --danger-tint: #2E1F1B;
+  --warning-tint: #2C2718;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --accent-text: #C08A63;
 }
 
 * { box-sizing: border-box; }
@@ -63,7 +114,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .sidebar nav a svg { width: 17px; height: 17px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.6; }
-.sidebar nav a:hover { background: rgba(0,0,0,0.04); color: var(--ink); }
+.sidebar nav a:hover { background: var(--hover-overlay); color: var(--ink); }
 .sidebar nav a.active { background: var(--panel); color: var(--ink); font-weight: 500; border: 1px solid var(--line); }
 
 .sidebar nav a .count {
@@ -190,7 +241,7 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
 }
 
-.filter-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.filter-chip.active { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-text); }
 
 .view-toggle { display: flex; gap: 4px; margin-left: auto; }
 .view-toggle-btn {
@@ -199,7 +250,7 @@ a { color: inherit; text-decoration: none; }
 }
 .view-toggle-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
 .view-toggle-btn:hover { border-color: var(--clay); color: var(--ink); }
-.view-toggle-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.view-toggle-btn.active { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-text); }
 
 /* Réglages : grille pleine largeur de panneaux */
 .settings-grid {
@@ -260,7 +311,7 @@ a { color: inherit; text-decoration: none; }
   padding: 9px 11px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fff;
+  background: var(--field-bg);
   color: var(--ink);
   font-family: 'Work Sans', sans-serif;
   font-size: 13px;
@@ -318,7 +369,7 @@ thead th {
 
 tbody tr { border-bottom: 1px solid var(--line); }
 tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(0,0,0,0.02); }
+tbody tr:hover { background: var(--hover-overlay); }
 td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 
 .project-cell, .row-cell { display: flex; align-items: center; gap: 12px; }
@@ -385,7 +436,7 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
   color: var(--ink-soft);
 }
 .pagination-link:hover { border-color: var(--clay); color: var(--ink); }
-.pagination-link.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pagination-link.active { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-text); }
 .pagination-link.disabled { opacity: 0.4; cursor: default; }
 
 .media-grid.preview { grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -460,7 +511,7 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 
 .browse-btn {
   padding: 10px 20px; border-radius: 8px; border: 1px solid var(--clay);
-  background: none; color: var(--clay); font-family: 'Work Sans', sans-serif; font-size: 13px; cursor: pointer;
+  background: none; color: var(--accent-text); font-family: 'Work Sans', sans-serif; font-size: 13px; cursor: pointer;
 }
 .browse-btn:hover { background: rgba(122,75,51,0.06); }
 #file-input { display: none; }
@@ -537,8 +588,8 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
   font-size: 13px;
   margin-bottom: 20px;
 }
-.alert-success { background: #EEF3EC; border-color: var(--ok); color: var(--ok); }
-.alert-danger { background: #F8ECEA; border-color: var(--danger); color: var(--danger); }
+.alert-success { background: var(--success-tint); border-color: var(--ok); color: var(--ok); }
+.alert-danger { background: var(--danger-tint); border-color: var(--danger); color: var(--danger); }
 .alert-info { background: var(--panel); border-color: var(--line); color: var(--ink); }
 .alert-block { align-items: flex-start; text-align: left; }
 
@@ -554,9 +605,9 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
   margin-right: 8px;
   vertical-align: 1px;
 }
-.badge-danger { background: #F8ECEA; color: var(--danger); }
-.badge-warning { background: #F5EEDD; color: var(--warn); }
-.badge-success { background: #EEF3EC; color: var(--ok); }
+.badge-danger { background: var(--danger-tint); color: var(--danger); }
+.badge-warning { background: var(--warning-tint); color: var(--warn); }
+.badge-success { background: var(--success-tint); color: var(--ok); }
 .badge-info { background: var(--panel); color: var(--ink-soft); border: 1px solid var(--line); }
 
 /* Un attribut hidden doit toujours gagner, même sur un élément qui a par
@@ -681,7 +732,12 @@ td { padding: 14px 20px; font-size: 14px; vertical-align: middle; }
 }
 .modal-box p { margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: var(--ink); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-#confirm-modal-ok { background: var(--danger); border-color: var(--danger); color: #fff; }
+/* Couleur fixe (pas var(--danger)) : ce bouton est un fond plein avec texte
+   blanc — --danger est éclairci en mode sombre pour rester lisible comme
+   TEXTE sur fond sombre (badges, alertes), ce qui casserait le contraste
+   texte blanc/fond ici. #A3402E fonctionne comme fond avec texte blanc dans
+   les deux thèmes (~6.3:1), inutile de le faire varier. */
+#confirm-modal-ok { background: #A3402E; border-color: #A3402E; color: #fff; }
 
 .updates-grid { display: grid; grid-template-columns: 480px; gap: 20px; align-items: start; }
 .updates-grid.has-details { grid-template-columns: 360px 1fr; }

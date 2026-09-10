@@ -26,6 +26,10 @@ class AuthenticatedSessionController extends Controller
     {
         $user = $request->validateCredentials();
 
+        if (! $user->isStaff()) {
+            return back()->withErrors(['email' => "Ce compte n'a pas accès à l'administration."])->onlyInput('email');
+        }
+
         if ($user->hasTwoFactorEnabled()) {
             $request->session()->put('2fa.user_id', $user->id);
             $request->session()->put('2fa.remember', $request->boolean('remember'));

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,13 +20,14 @@
   main { max-width: 560px; margin: 8vh auto; padding: 0 6vw; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(28px, 4.5vw, 38px); margin: 0 0 24px; }
   .notice { font-size: 14px; color: var(--ink-soft); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
-  .error { font-size: 13px; color: #A3402E; margin: 4px 0 0; }
+  .error { font-size: 13px; color: var(--danger, #A3402E); margin: 4px 0 0; }
   form { display: flex; flex-direction: column; gap: 14px; }
   input, textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font-family: 'Work Sans', sans-serif; font-size: 14px; }
   textarea { resize: vertical; min-height: 140px; }
   button { align-self: flex-start; padding: 12px 26px; background: var(--clay); border: none; border-radius: 999px; color: #fff; font-size: 14px; cursor: pointer; }
   button:hover { opacity: 0.9; }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 

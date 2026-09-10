@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Media;
+use App\Models\Setting;
 use App\Services\MediaIngestService;
 use App\Services\MediaProcessingStatus;
 use App\Services\QueuePump;
@@ -28,7 +29,11 @@ class MediaController extends Controller
         }
 
         if ($status = $request->query('status')) {
-            $query->where('status', $status);
+            if ($status === 'processing') {
+                $query->has('variants', '<', 3);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         $media = $query->latest()->paginate(60)->withQueryString();
@@ -42,6 +47,7 @@ class MediaController extends Controller
                 'draft' => Media::whereNull('trashed_at')->where('status', 'draft')->count(),
                 'published' => Media::whereNull('trashed_at')->where('status', 'published')->count(),
                 'trashed' => Media::whereNotNull('trashed_at')->count(),
+                'processing' => Media::whereNull('trashed_at')->has('variants', '<', 3)->count(),
             ],
         ]);
     }
@@ -132,11 +138,17 @@ class MediaController extends Controller
                     ->filter(fn ($f) => in_array(strtolower($f->getExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true))
                     ->count()
                 : 0,
+            'importOneByOne' => Setting::get('import_one_by_one') !== '0',
         ]);
     }
 
     public function importFromFolder(MediaIngestService $service): RedirectResponse
     {
+        if (Setting::get('import_one_by_one') !== '0') {
+            return redirect()->route('admin.media.import')
+                ->with('status', "L'import de masse est désactivé tant que le réglage « une photo par une photo » est actif (Réglages → Médiathèque).");
+        }
+
         $result = $service->ingestFromFolder();
 
         $message = "{$result['imported']} œuvre(s) importée(s)";
@@ -155,7 +167,11 @@ class MediaController extends Controller
     public function store(Request $request, MediaIngestService $service): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'max:20480', 'mimetypes:image/jpeg,image/png,image/webp,image/gif'],
+            // Plafond commun image+vidéo : reste sous upload_max_filesize/
+            // post_max_size par défaut (souvent 25-32 Mo sur un hébergement
+            // mutualisé) — une vidéo plus lourde nécessite d'augmenter ces
+            // réglages PHP côté hébergement, ce que Focale ne peut pas faire lui-même.
+            'file' => ['required', 'file', 'max:24576', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'],
         ]);
 
         $result = $service->ingest($request->file('file'));

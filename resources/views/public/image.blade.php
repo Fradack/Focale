@@ -3,7 +3,7 @@
   $visibleExif = $media->visibleExif();
 @endphp
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
   :root { --bg: #E7E3DC; --panel: #EFEDE7; --ink: #1E1C19; --ink-soft: #5C574E; --clay: #7A4B33; --line: #C9C2B4; }
   * { box-sizing: border-box; }
@@ -62,6 +63,10 @@
   footer { display: flex; align-items: center; justify-content: space-between; padding: 22px 6vw; border-top: 1px solid var(--line); font-size: 14px; }
   footer a { text-decoration: none; color: var(--ink-soft); }
   footer a:hover { color: var(--ink); }
+  .like-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 16px; margin: 0 0 22px; cursor: pointer; font-size: 14px; color: var(--ink); font-family: inherit; }
+  .like-btn:hover { border-color: var(--clay); }
+  .like-btn i { color: #DC2626; font-size: 15px; }
+  .like-btn[aria-pressed="true"] { border-color: #DC2626; }
   @media (max-width: 860px) {
     main { grid-template-columns: 1fr; }
     aside { border-left: none; border-top: 1px solid var(--line); padding: 40px 6vw; }
@@ -69,6 +74,7 @@
     .description { max-width: none; }
   }
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 
@@ -80,7 +86,11 @@
 <main>
   <div class="figure">
     <div class="figure-wrap">
-      <img src="{{ $media->variant('web')?->url() }}" alt="{{ $media->alt_text }}">
+      @if ($media->isVideo())
+        <video src="{{ $media->sourceUrl() }}" controls playsinline style="width:100%;max-height:82vh;display:block;"></video>
+      @else
+        <img src="{{ $media->sourceUrl() }}" alt="{{ $media->alt_text }}">
+      @endif
       @if ($media->caption)
         <figcaption>{{ $media->caption }}</figcaption>
       @endif
@@ -92,6 +102,12 @@
       <a class="project-link" href="{{ route('public.album', $album) }}">← {{ $album->title }}</a>
     @endif
     <h1>{{ $media->title ?: 'Photographie' }}</h1>
+
+    <button type="button" id="like-btn" class="like-btn" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+      <i class="{{ $liked ? 'fa-solid' : 'fa-regular' }} fa-heart" aria-hidden="true"></i>
+      <span id="like-count">{{ $media->likes()->count() }}</span>
+    </button>
+
     @if ($media->description)
       <p class="description">{{ $media->description }}</p>
     @endif
@@ -104,7 +120,7 @@
       </div>
     @endif
 
-    @if (! empty($visibleExif) || ($media->taken_at) || ($media->location && ! $media->hide_gps))
+    @if (! empty($visibleExif) || ($media->taken_at) || $media->displayLocation())
       <div class="rule"></div>
       <h2 class="section-title">Détails techniques</h2>
       <dl class="exif">
@@ -114,10 +130,15 @@
           @endif
         @endforeach
         @if ($media->taken_at)
-          <div><dt>Date de prise</dt><dd>{{ $media->taken_at->format('d/m/Y') }}</dd></div>
+          <div><dt>Date de prise</dt><dd>{{ $media->taken_at->format('d/m/Y à H:i') }}</dd></div>
         @endif
-        @if ($media->location && ! $media->hide_gps)
-          <div><dt>Lieu</dt><dd>{{ $media->location }}</dd></div>
+        @if ($media->displayLocation())
+          <div><dt>Lieu</dt><dd>
+            {{ $media->displayLocation() }}
+            @if ($media->mapUrl())
+              — <a href="{{ $media->mapUrl() }}" target="_blank" rel="noopener">Voir sur la carte ↗</a>
+            @endif
+          </dd></div>
         @endif
       </dl>
     @endif
@@ -136,6 +157,46 @@
   <span>@if ($previous)<a href="{{ route('public.image', $previous) }}">← {{ $previous->title }}</a>@endif</span>
   <span>@if ($next)<a href="{{ route('public.image', $next) }}">{{ $next->title }} →</a>@endif</span>
 </footer>
+
+<script>
+  (function () {
+    const btn = document.getElementById('like-btn');
+    const icon = btn.querySelector('i');
+    const countEl = document.getElementById('like-count');
+    const likeUrl = @json(route('public.image.like', $media));
+    const csrfToken = @json(csrf_token());
+    let busy = false;
+
+    btn.addEventListener('click', () => {
+      if (busy) return;
+      busy = true;
+
+      fetch(likeUrl, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          btn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+          icon.classList.toggle('fa-solid', data.liked);
+          icon.classList.toggle('fa-regular', !data.liked);
+          countEl.textContent = data.count;
+        })
+        .finally(() => { busy = false; });
+    });
+  })();
+
+  // Une vue n'est comptabilisée qu'après 10s passées sur la page — pas au
+  // simple chargement — pour refléter une vraie consultation de la photo.
+  (function () {
+    const viewUrl = @json(route('public.image.view', $media));
+    const csrfToken = @json(csrf_token());
+
+    setTimeout(() => {
+      fetch(viewUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' } });
+    }, 10000);
+  })();
+</script>
 
 </body>
 </html>

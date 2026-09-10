@@ -20,6 +20,9 @@
     <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view]) }}" class="filter-chip {{ ! request('status') ? 'active' : '' }}">Tous ({{ $counts['all'] }})</a>
     <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'published']) }}" class="filter-chip {{ request('status') === 'published' ? 'active' : '' }}">Publiées ({{ $counts['published'] }})</a>
     <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'draft']) }}" class="filter-chip {{ request('status') === 'draft' ? 'active' : '' }}">Brouillons ({{ $counts['draft'] }})</a>
+    @if ($counts['processing'] > 0)
+      <a href="{{ route('admin.media.index', $baseQuery + ['view' => $view, 'status' => 'processing']) }}" class="filter-chip {{ request('status') === 'processing' ? 'active' : '' }}">En traitement ({{ $counts['processing'] }})</a>
+    @endif
 
     <div class="view-toggle">
       <a href="{{ route('admin.media.index', $baseQuery + ['status' => request('status'), 'view' => 'grid']) }}" class="view-toggle-btn {{ $view === 'grid' ? 'active' : '' }}" aria-label="Vue grille">

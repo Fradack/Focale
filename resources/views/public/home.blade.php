@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr"{!! \App\Support\Theme::publicHtmlAttr() !!}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,6 +42,7 @@
   .card-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 19px; margin: 16px 0 0; }
 
 </style>
+@include('components.theme-vars-dark')
 </head>
 <body>
 

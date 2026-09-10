@@ -6,46 +6,57 @@
     </div>
   </div>
 
-  <div class="alert alert-info alert-block">
+  <div class="alert alert-warning alert-block">
     <div>
-      <strong>Après l'envoi, les vignettes se génèrent en tâche de fond.</strong>
-      <div style="margin-top:4px;">
-        Ce traitement n'avance que pendant qu'une page de l'administration reste ouverte et active dans un onglet au premier plan
-        (les navigateurs ralentissent fortement les onglets en arrière-plan). Restez sur cette page, ou une autre page d'administration,
-        jusqu'à ce que la barre de progression en haut affiche 100% — sinon les œuvres restent visibles mais sans image tant que le traitement n'est pas terminé.
-        Pour un traitement fiable même onglet fermé, une tâche planifiée peut être configurée côté hébergement (demande-le si besoin).
+      <strong>Pourquoi le traitement des images prend du temps</strong>
+      <div style="margin-top:6px;">
+        Chaque photo importée est redimensionnée en 3 tailles (vignette, web, rétina) et convertie au format WebP — c'est ce qui permet au site public de charger vite, sur mobile comme sur grand écran, au lieu de servir le fichier original (souvent plusieurs dizaines de Mo). Plus la photo source est grande (haute résolution), plus cette conversion demande de calcul et de temps.
+      </div>
+      <div style="margin-top:6px;">
+        Sur cet hébergement, il n'y a pas de processus permanent dédié à ce traitement : il n'avance que pendant qu'une page de l'administration reste ouverte et active dans un onglet au premier plan (les navigateurs ralentissent fortement les onglets en arrière-plan). Reste sur cette page, ou une autre page d'administration, jusqu'à ce que la barre de progression en haut affiche 100% — sinon les œuvres restent visibles mais sans image tant que le traitement n'est pas terminé. Pour un traitement fiable même onglet fermé, une tâche planifiée peut être configurée côté hébergement (demande-le si besoin).
       </div>
     </div>
   </div>
 
-  <div class="panel">
-    <h2 style="margin:0 0 10px;">Import depuis un dossier serveur (gros transferts)</h2>
-    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;">
-      Pour des centaines de photos d'un coup, dépose-les par FTP/SFTP directement dans ce dossier sur le serveur au lieu de passer par l'envoi navigateur :
-    </p>
-    <code style="display:block;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;margin-bottom:14px;word-break:break-all;">{{ $importFolderPath }}</code>
-
-    @if (session('status') && str_contains(session('status'), 'importée'))
-      <div class="alert alert-success" style="margin-bottom:14px;">{{ session('status') }}</div>
-    @endif
-
-    <div style="display:flex;align-items:center;gap:14px;">
-      <span style="font-size:13px;color:var(--ink-soft);">{{ $importFolderCount }} fichier(s) en attente dans ce dossier</span>
-      @if ($importFolderCount > 0)
-        <form method="POST" action="{{ route('admin.media.import-folder') }}" id="import-folder-form">
-          @csrf
-          <button type="submit" class="btn primary" id="import-folder-btn">Importer depuis le dossier</button>
-        </form>
-      @endif
+  @if ($importOneByOne)
+    <div class="alert alert-info alert-block" style="margin-top:16px;">
+      <div>
+        <strong>Import de masse désactivé.</strong>
+        <div style="margin-top:4px;">
+          Le réglage « Import une photo par une photo » est actif (Réglages → Médiathèque) : l'import depuis un dossier serveur, qui traite de nombreux fichiers d'un coup, est désactivé tant que ce mode est en place. Désactive-le dans les réglages pour reprendre l'import de masse.
+        </div>
+      </div>
     </div>
-  </div>
+  @else
+    <div class="panel">
+      <h2 style="margin:0 0 10px;">Import depuis un dossier serveur (gros transferts)</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px;">
+        Pour des centaines de photos d'un coup, dépose-les par FTP/SFTP directement dans ce dossier sur le serveur au lieu de passer par l'envoi navigateur :
+      </p>
+      <code style="display:block;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;margin-bottom:14px;word-break:break-all;">{{ $importFolderPath }}</code>
+
+      @if (session('status') && str_contains(session('status'), 'importée'))
+        <div class="alert alert-success" style="margin-bottom:14px;">{{ session('status') }}</div>
+      @endif
+
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:13px;color:var(--ink-soft);">{{ $importFolderCount }} fichier(s) en attente dans ce dossier</span>
+        @if ($importFolderCount > 0)
+          <form method="POST" action="{{ route('admin.media.import-folder') }}" id="import-folder-form">
+            @csrf
+            <button type="submit" class="btn primary" id="import-folder-btn">Importer depuis le dossier</button>
+          </form>
+        @endif
+      </div>
+    </div>
+  @endif
 
   <div class="dropzone" id="dropzone">
     <svg viewBox="0 0 24 24"><path d="M12 3v14"></path><path d="M5 10l7-7 7 7"></path><path d="M5 21h14"></path></svg>
     <h2>Glissez vos images ici</h2>
     <p>ou parcourez votre ordinateur pour en sélectionner plusieurs à la fois</p>
     <button class="browse-btn" type="button" id="browse-btn">Parcourir les fichiers</button>
-    <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,image/gif">
+    <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm">
   </div>
 
   <div class="queue" id="queue" style="display:none;margin-top:32px;">
@@ -70,7 +81,11 @@
   const uploadUrl = @json(route('admin.media.store'));
   const itemStatusUrlTemplate = @json(route('admin.media.item-processing-status', ['media' => '__ID__']));
   const csrfToken = @json(csrf_token());
-  const concurrency = @json(max(1, (int) \App\Models\Setting::get('import_concurrency', 3)));
+  const oneByOne = @json($importOneByOne);
+  // En mode « une photo par une photo », une seule œuvre à la fois — et le
+  // slot ne se libère qu'une fois son traitement (vignettes) terminé à 100%,
+  // pas seulement son envoi (voir onSettled plus bas).
+  const concurrency = oneByOne ? 1 : @json(max(1, (int) \App\Models\Setting::get('import_concurrency', 3)));
 
   let total = 0;
   let done = 0;
@@ -113,7 +128,7 @@
   }
 
   function handleFiles(fileList) {
-    const files = Array.from(fileList).filter(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+    const files = Array.from(fileList).filter(f => /^(image\/(jpeg|png|webp|gif)|video\/(mp4|webm))$/.test(f.type));
     if (!files.length) return;
 
     queue.style.display = 'block';
@@ -159,9 +174,18 @@
     item.querySelector('.queue-item-meta').textContent = formatSize(file.size);
     queueList.prepend(item);
 
-    const reader = new FileReader();
-    reader.onload = () => { item.querySelector('img').src = reader.result; };
-    reader.readAsDataURL(file);
+    if (file.type.startsWith('video/')) {
+      // Pas d'aperçu réel pour une vidéo (pas de génération de poster sans
+      // ffmpeg, absent de cet environnement) : une icône de remplacement,
+      // dans le même <img> pour garder le style existant de la file d'import.
+      item.querySelector('img').src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5C574E" stroke-width="1.5"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>'
+      );
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => { item.querySelector('img').src = reader.result; };
+      reader.readAsDataURL(file);
+    }
 
     const fill = item.querySelector('.progress-fill');
     const statusLabel = item.querySelector('.status-label');
@@ -188,16 +212,21 @@
         if (data.duplicate) {
           item.classList.add('duplicate');
           statusLabel.textContent = 'Doublon détecté';
+          onSettled();
         } else {
           item.classList.add('done');
           statusLabel.textContent = 'Importée';
-          watchItemProcessing(item, statusLabel, data.media.id);
+          // En mode « une par une », le slot ne se libère qu'à la fin du
+          // traitement (voir watchItemProcessing) — sinon (mode normal),
+          // tout de suite : le traitement continue en tâche de fond.
+          watchItemProcessing(item, statusLabel, data.media.id, oneByOne ? onSettled : null);
+          if (! oneByOne) onSettled();
         }
       } else {
         item.classList.add('failed');
         statusLabel.textContent = describeError(xhr);
+        onSettled();
       }
-      onSettled();
     });
 
     xhr.addEventListener('error', () => {
@@ -209,8 +238,9 @@
     });
 
     // Progression du traitement (miniatures) de cette œuvre précise, une fois
-    // importée — distincte de la barre d'envoi ci-dessus.
-    function watchItemProcessing(item, statusLabel, mediaId) {
+    // importée — distincte de la barre d'envoi ci-dessus. `onDone`, si fourni,
+    // n'est appelé qu'une fois le traitement à 100% (mode une par une).
+    function watchItemProcessing(item, statusLabel, mediaId, onDone) {
       const track = item.querySelector('.processing-track');
       const fill = item.querySelector('.processing-fill');
       track.style.display = 'block';
@@ -231,6 +261,7 @@
 
             if (data.done) {
               statusLabel.textContent = 'Traitée';
+              if (onDone) onDone();
             } else {
               setTimeout(poll, 3000);
             }
