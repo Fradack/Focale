@@ -37,7 +37,17 @@ class AlbumController extends Controller
             return response()->view('public.album-lock', ['album' => $album])->setStatusCode(200);
         }
 
-        $album->load(['media.variants', 'approvedComments', 'approvedGuestbookEntries']);
+        $relations = ['media.variants', 'approvedComments'];
+
+        // Le plugin Livre d'or ajoute une relation qui référence sa propre
+        // classe de modèle : ne jamais la charger tant que le plugin n'est
+        // pas réellement installé (fichiers copiés), sous peine d'une
+        // erreur "Class not found" sur CHAQUE page d'album.
+        if (\App\Support\Plugins::enabled('livre-dor')) {
+            $relations[] = 'approvedGuestbookEntries';
+        }
+
+        $album->load($relations);
 
         return view('public.album', [
             'album' => $album,

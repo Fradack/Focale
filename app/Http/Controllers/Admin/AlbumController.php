@@ -90,7 +90,15 @@ class AlbumController extends Controller
         $data['seo_auto'] = $request->boolean('seo_auto');
         $data['comments_enabled'] = $request->boolean('comments_enabled');
         $data['is_featured'] = $request->boolean('is_featured');
-        $data['guestbook_enabled'] = $request->boolean('guestbook_enabled');
+
+        // La colonne `guestbook_enabled` n'existe que si le plugin Livre
+        // d'or a été installé (sa migration l'ajoute) — ne jamais tenter de
+        // l'écrire avant, sous peine d'une erreur SQL "Unknown column".
+        if (\App\Support\Plugins::enabled('livre-dor')) {
+            $data['guestbook_enabled'] = $request->boolean('guestbook_enabled');
+        } else {
+            unset($data['guestbook_enabled']);
+        }
 
         $album->fill($data);
 
