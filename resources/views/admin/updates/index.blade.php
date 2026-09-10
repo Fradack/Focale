@@ -181,7 +181,6 @@
           btn.disabled = true;
           btn.textContent = 'Mise à jour en cours…';
           document.getElementById('update-progress').hidden = false;
-          window.onbeforeunload = () => 'Une mise à jour est en cours.';
           return;
         }
 
