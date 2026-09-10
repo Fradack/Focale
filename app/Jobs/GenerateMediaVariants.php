@@ -39,18 +39,16 @@ class GenerateMediaVariants implements ShouldQueue
     {
         // Décoder une photo haute résolution via GD peut demander plusieurs
         // centaines de Mo (largeur × hauteur × 4 octets, avant même le
-        // travail de redimensionnement/encodage) — largement au-dessus des
-        // limites par défaut de nombreux hébergements. Un dépassement est un
-        // fatal PHP non rattrapable par un try/catch : la seule protection
-        // possible est d'éviter qu'il survienne. Ce réglage ne s'applique
-        // qu'à cette tâche précise, jamais au reste de l'application.
-        // 512M -> 1024M : les originaux acceptés vont désormais jusqu'à 1 Go
-        // (voir MediaController::store()), un plafond plus bas serait la
-        // première chose à céder sur une très grosse photo.
+        // travail de redimensionnement/encodage). 256M est le plafond dur
+        // confirmé par l'hébergeur (PulseHeberg) sur cette offre : au-delà,
+        // ini_set est simplement ignoré côté plateforme. Un dépassement est
+        // un fatal PHP non rattrapable par un try/catch : la seule
+        // protection possible est d'éviter qu'il survienne. Ce réglage ne
+        // s'applique qu'à cette tâche précise, jamais au reste de l'appli.
         if (function_exists('ini_set')) {
             $current = ini_get('memory_limit');
-            if ($current !== '-1' && $this->toBytes($current) < 1024 * 1024 * 1024) {
-                @ini_set('memory_limit', '1024M');
+            if ($current !== '-1' && $this->toBytes($current) < 256 * 1024 * 1024) {
+                @ini_set('memory_limit', '256M');
             }
         }
 

@@ -233,15 +233,10 @@ class MediaController extends Controller
     public function store(Request $request, MediaIngestService $service): JsonResponse
     {
         $request->validate([
-            // Ce plafond ne doit pas être le facteur limitant : la vraie limite
-            // vient de upload_max_filesize/post_max_size (PHP) et de la taille
-            // de requête max du serveur web (souvent 8-32 Mo par défaut sur un
-            // hébergement mutualisé) — des réglages hors de portée de Focale.
-            // 1 Go laisse la place à de longues vidéos sans imposer, côté
-            // appli, une limite plus stricte que celle déjà posée par
-            // l'hébergement (qu'il faudra très probablement relever aussi
-            // pour profiter réellement de ce plafond).
-            'file' => ['required', 'file', 'max:1048576', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'],
+            // 100 Mo : plafond réel confirmé par l'hébergeur (PulseHeberg) pour
+            // une requête PHP sur cette offre — au-delà, la requête n'atteint
+            // même pas ce contrôleur. Pas de marge à gagner côté appli ici.
+            'file' => ['required', 'file', 'max:102400', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm'],
         ]);
 
         $result = $service->ingest($request->file('file'));

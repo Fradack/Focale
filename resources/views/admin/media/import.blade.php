@@ -95,7 +95,7 @@
   fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
 
   function describeError(xhr) {
-    if (xhr.status === 413) return 'Fichier trop volumineux (1 Go max côté site — ou une limite plus basse imposée par l\'hébergement)';
+    if (xhr.status === 413) return 'Fichier trop volumineux (100 Mo max, limite imposée par l\'hébergement)';
     if (xhr.status === 419) return 'Session expirée — recharge la page';
 
     try {

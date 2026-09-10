@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AlbumLike;
+use App\Models\Comment;
+use App\Models\MediaLike;
 use App\Models\User;
+use App\Support\Visitor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -70,9 +74,37 @@ class AccountController extends Controller
         return redirect()->intended(route('customer.dashboard', absolute: false));
     }
 
+    /**
+     * Les "j'aime" sont rattachés au cookie visiteur (voir Visitor::id()),
+     * pas au compte — un client connecté retrouve donc ici les mêmes j'aime
+     * que ceux posés depuis ce même navigateur avant/après connexion, pas
+     * l'historique complet de son compte sur d'autres appareils.
+     */
     public function dashboard(Request $request): View
     {
-        return view('customer.dashboard', ['user' => $request->user()]);
+        $user = $request->user();
+        $visitorId = Visitor::id();
+
+        $comments = Comment::where('user_id', $user->id)
+            ->with('album')
+            ->latest()
+            ->get();
+
+        $likedMedia = MediaLike::where('visitor_id', $visitorId)
+            ->with('media')
+            ->latest()
+            ->get()
+            ->pluck('media')
+            ->filter();
+
+        $likedAlbums = AlbumLike::where('visitor_id', $visitorId)
+            ->with('album')
+            ->latest()
+            ->get()
+            ->pluck('album')
+            ->filter();
+
+        return view('customer.dashboard', compact('user', 'comments', 'likedMedia', 'likedAlbums'));
     }
 
     public function logout(Request $request): RedirectResponse
