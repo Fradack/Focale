@@ -106,34 +106,34 @@
         <p style="font-size:12px;color:var(--ink-soft);margin:0 0 12px;">
           Bloque l'accès au site public selon le pays du visiteur (détecté via son adresse IP, de façon approximative). Sans effet sur l'administration ni sur les visiteurs déjà connectés.
         </p>
-        <div class="field">
+        <div>
           <label style="display:flex;align-items:center;gap:8px;font-weight:400;">
-            <input type="radio" name="country_restriction_mode" value="disabled" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'disabled')>
+            <input type="radio" name="country_restriction_mode" value="disabled" style="width:auto;" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'disabled')>
             Désactivé
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:6px;">
-            <input type="radio" name="country_restriction_mode" value="blocklist" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'blocklist')>
+            <input type="radio" name="country_restriction_mode" value="blocklist" style="width:auto;" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'blocklist')>
             Bloquer certains pays
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-top:6px;">
-            <input type="radio" name="country_restriction_mode" value="allowlist" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'allowlist')>
+            <input type="radio" name="country_restriction_mode" value="allowlist" style="width:auto;" @checked(old('country_restriction_mode', $values['country_restriction_mode']) === 'allowlist')>
             Autoriser uniquement certains pays
           </label>
         </div>
-        <div class="field" style="margin-top:12px;">
-          <label>Pays concernés</label>
+        <div style="margin-top:12px;">
+          <label style="display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;">Pays concernés</label>
           <div style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:10px;display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:4px 12px;">
             @php $selected = old('country_restriction_countries', $values['country_restriction_countries']); @endphp
             @foreach ($countries as $code => $label)
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;">
-                <input type="checkbox" name="country_restriction_countries[]" value="{{ $code }}" @checked(in_array($code, $selected, true))>
+                <input type="checkbox" name="country_restriction_countries[]" value="{{ $code }}" style="width:auto;" @checked(in_array($code, $selected, true))>
                 {{ $label }}
               </label>
             @endforeach
           </div>
         </div>
 
-        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
           <button type="button" id="test-geo-btn" class="btn" style="font-size:13px;">Tester la détection</button>
           <span id="test-geo-result" style="margin-left:10px;font-size:13px;color:var(--ink-soft);"></span>
           <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">
@@ -141,9 +141,9 @@
           </p>
         </div>
 
-        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
           <label style="display:flex;align-items:center;gap:8px;font-weight:400;">
-            <input type="checkbox" name="bot_restriction_enabled" value="1" @checked($values['bot_restriction_enabled'] === '1')>
+            <input type="checkbox" name="bot_restriction_enabled" value="1" style="width:auto;" @checked($values['bot_restriction_enabled'] === '1')>
             Bloquer les robots (bots/crawlers), y compris les moteurs de recherche
           </label>
           <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">
